@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Заставке нужно только ядро; страница Studio отдаётся локальным сервером и Tauri API не получает.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

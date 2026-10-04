@@ -1,0 +1,57 @@
+{
+  "format": "mocapgate.native/1",
+  "python": "3.12.13",
+  "abi": "cpython-312",
+  "system": "linux",
+  "machine": "x86_64",
+  "modules": {
+    "cli": {
+      "source": "mocapgate.py",
+      "module": "_mocapgate_native_cli",
+      "library": "linux-x86_64___mocapgate_native_cli.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "1eb300e3ea4e4d3eb31e1bba340be7a1af39e6628cc4088052d4009228009072"
+    },
+    "server": {
+      "source": "apps/studio/server.py",
+      "module": "_mocapgate_native_server",
+      "library": "apps/studio/linux-x86_64___mocapgate_native_server.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "014f799a9bc5de21b82265f8c74a1558dfec2910a53989d7675fc2f8003c2862"
+    },
+    "pipeline": {
+      "source": "core/pipeline.py",
+      "module": "_mocapgate_native_pipeline",
+      "library": "core/linux-x86_64___mocapgate_native_pipeline.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "35cebee9e3ddd68f3dfeceebe51f8d68c2d6cc0a2d46f356e33e0b63027b1bc0"
+    },
+    "retarget": {
+      "source": "core/retarget.py",
+      "module": "_mocapgate_native_retarget",
+      "library": "core/linux-x86_64___mocapgate_native_retarget.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "9f1e3581ec940923a728f4c7ef2eb503d98013777bbc7c882973bacf476a2f85"
+    },
+    "cleanup": {
+      "source": "core/cleanup.py",
+      "module": "_mocapgate_native_cleanup",
+      "library": "core/linux-x86_64___mocapgate_native_cleanup.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "d5d54907f958a860283b58211211f3621d220f43b157dfb9cc7bab5ecabb73d2"
+    },
+    "report": {
+      "source": "core/report.py",
+      "module": "_mocapgate_native_report",
+      "library": "core/linux-x86_64___mocapgate_native_report.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "8df4da2ae09907ec7d84c5ffa2529c6b71005f054cf54044cf1e6506a96376b7"
+    },
+    "components": {
+      "source": "core/components.py",
+      "module": "_mocapgate_native_components",
+      "library": "core/linux-x86_64___mocapgate_native_components.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "3521975637fe362ca39a1123b7287cb282427cb262f4f2e3f5c7782eed0a6576"
+    },
+    "details": {
+      "source": "core/details.py",
+      "module": "_mocapgate_native_details",
+      "library": "core/linux-x86_64___mocapgate_native_details.cpython-312-x86_64-linux-gnu.so",
+      "sha256": "3562e64dcb5dcceffdd5c4c8dbf5c8d94d1236674617b8aa4c0b0b0e38f46f1a"
+    }
+  }
+}

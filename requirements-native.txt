@@ -1,0 +1,5 @@
+# Build-only dependencies. Not installed into the shipped application runtime.
+Cython==3.3.0
+setuptools==84.0.0
+uv==0.12.19
+zstandard==0.25.0

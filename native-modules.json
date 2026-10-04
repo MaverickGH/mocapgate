@@ -1,0 +1,18 @@
+{
+  "python": "3.12.13",
+  "uv": "0.12.19",
+  "cython": "3.3.0",
+  "setuptools": "84.0.0",
+  "modules": {
+    "cli": "mocapgate.py",
+    "server": "apps/studio/server.py",
+    "pipeline": "core/pipeline.py",
+    "retarget": "core/retarget.py",
+    "cleanup": "core/cleanup.py",
+    "report": "core/report.py",
+    "components": "core/components.py",
+    "details": "core/details.py"
+  },
+  "zstandard": "0.25.0",
+  "standalone_release": "20260807"
+}

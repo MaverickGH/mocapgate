@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSCameraUsageDescription</key>
+  <string>MoCapGate Studio records you with the camera to make motion capture. Video stays on this computer.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>MoCapGate Studio does not record sound; macOS asks because the camera API can include a microphone.</string>
+</dict>
+</plist>

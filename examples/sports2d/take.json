@@ -1,0 +1,81 @@
+{
+ "id": "sample-sports2d-two-people",
+ "name": "Demo — Sports2D, two people",
+ "created": "2026-10-03 00:00:00",
+ "source": "file",
+ "backend": "mediapipe",
+ "options": {
+  "pose_model": "heavy",
+  "smoothing": 0.5,
+  "root": "image",
+  "focal_mm": 0,
+  "space": "global",
+  "foot_lock": true,
+  "max_people": 2,
+  "fps": 0,
+  "capture_hands": true,
+  "capture_face": true
+ },
+ "status": "done",
+ "fps_hint": 0.0,
+ "input": "input.mp4",
+ "video": "input.mp4",
+ "error": null,
+ "fps": 30.0,
+ "frames": 230,
+ "bvh": "person_1.bvh",
+ "score": 32,
+ "verdict": "bad",
+ "report_file": "person_1.report_file.json",
+ "overlay": "person_1.overlay.json",
+ "start_frame": 0,
+ "end_frame": 224,
+ "focal_used": 50.0,
+ "people": [
+  {
+   "id": 1,
+   "fps": 30.0,
+   "frames": 230,
+   "bvh": "person_1.bvh",
+   "score": 32,
+   "verdict": "bad",
+   "report_file": "person_1.report_file.json",
+   "overlay": "person_1.overlay.json",
+   "start_frame": 0,
+   "end_frame": 224,
+   "capture_file": "person_1.capture_file.json",
+   "capture_counts": {
+    "left": 48,
+    "right": 115,
+    "face": 75
+   },
+   "focal_used": 50.0
+  },
+  {
+   "id": 2,
+   "fps": 30.0,
+   "frames": 230,
+   "bvh": "person_2.bvh",
+   "score": 30,
+   "verdict": "bad",
+   "report_file": "person_2.report_file.json",
+   "overlay": "person_2.overlay.json",
+   "start_frame": 37,
+   "end_frame": 205,
+   "capture_file": "person_2.capture_file.json",
+   "capture_counts": {
+    "left": 155,
+    "right": 8,
+    "face": 14
+   },
+   "focal_used": 50.0
+  }
+ ],
+ "processed": "2026-10-03 17:18:06",
+ "capture_file": "person_1.capture_file.json",
+ "capture_counts": {
+  "left": 48,
+  "right": 115,
+  "face": 75
+ }
+}

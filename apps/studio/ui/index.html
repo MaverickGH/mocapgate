@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoCapGate Studio</title>
+<link rel="icon" href="/ui/icon.png">
+<link rel="stylesheet" href="/ui/studio.css">
+<script type="importmap">
+{ "imports": { "three": "/three/build/three.module.js", "three/addons/": "/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo" aria-hidden="true"></div><b>MoCapGate</b> <span data-i18n="studio">Studio</span></div>
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-view="takes" data-i18n="tab_takes">Takes</button>
+    <button class="tab" data-view="camera" data-i18n="tab_camera">Camera</button>
+    <button class="tab" data-view="status" data-i18n="tab_status">Status &amp; AI</button>
+    <button class="tab" data-view="settings" data-i18n="tab_settings">Settings</button>
+  </nav>
+  <div class="pills" id="pills"></div>
+  <button class="ghost small" id="open-browser" data-i18n="open_browser" data-i18n-title="open_browser_hint">Open in browser</button>
+  <button class="ghost small" id="lang" title="Language">RU</button>
+</header>
+
+<!-- ======================================================== Дубли -->
+<main class="view" id="view-takes">
+  <aside class="side">
+    <button class="primary wide" id="new-take" data-i18n="new_take">+ New take</button>
+    <div class="list" id="take-list"></div>
+    <p class="empty hidden" id="no-takes" data-i18n="no_takes">No takes yet. Drop a video here or record one with the camera.</p>
+    <button class="ghost small" id="reveal-library" data-i18n="reveal_library">Show library folder</button>
+  </aside>
+
+  <section class="stage" id="new-panel">
+    <div class="panel-heading">
+      <h1 data-i18n="new_title">New take</h1>
+      <p data-i18n="new_sub">A video of a person → animation of a skeleton (BVH / FBX) for Blender, Maya and engines.</p>
+    </div>
+    <label class="drop big" id="drop" tabindex="0">
+      <input type="file" id="file-input" multiple accept="video/*,.json,.pt,.npz,.zip" hidden>
+      <span><b data-i18n="drop_title">Drop a video here</b><br><small data-i18n="drop_hint">mp4, mov, webm — or a result from Colab (.zip / .mocapgate.json)</small></span>
+    </label>
+    <div class="files" id="picked"></div>
+    <label class="field"><span data-i18n="take_name">Name</span><input id="take-name" maxlength="80" placeholder="walk_01"></label>
+    <fieldset class="field">
+      <legend data-i18n="backend">How to recognize the motion</legend>
+      <div class="cards3" id="backend-cards">
+        <button class="card on" data-backend="mediapipe"><b>MediaPipe</b><small data-i18n="be_mediapipe">On this computer, no GPU. Body without fingers. Quick to try.</small></button>
+        <button class="card" data-backend="gvhmr-colab"><b>GVHMR · Colab</b><small data-i18n="be_colab">Best quality: whole body in the world, on Google's free GPU. A few minutes.</small></button>
+        <button class="card" data-backend="gvhmr-local"><b>GVHMR · <span data-i18n="this_pc">this PC</span></b><small data-i18n="be_local">Same quality on your NVIDIA GPU — connect GVHMR in Status.</small></button>
+      </div>
+    </fieldset>
+    <details class="opts" id="new-opts">
+      <summary data-i18n="options">Options</summary>
+      <div class="opt-grid" id="new-opt-grid"></div>
+    </details>
+    <div class="actions">
+      <button class="primary" id="start" disabled data-i18n="start">Make the animation</button>
+      <span class="hint" id="start-hint"></span>
+    </div>
+    <div class="colab-steps hidden" id="colab-steps">
+      <h3 data-i18n="colab_title">GVHMR in Colab — three steps</h3>
+      <ol>
+        <li><span data-i18n="colab_1">Open the notebook (a Google account is enough) and choose Runtime → T4 GPU.</span>
+          <div class="btns"><button class="small" id="open-colab" data-i18n="open_colab">Open in Colab</button>
+          <a class="button small ghost" id="dl-notebook" data-i18n="download_notebook">Download notebook (.ipynb)</a></div></li>
+        <li data-i18n="colab_2">Run the cells; at step 3 upload SMPLX_NEUTRAL.npz once (free sign-up at smpl-x.is.tue.mpg.de), at step 4 — your video.</li>
+        <li data-i18n="colab_3">Drop the downloaded *_mocapgate.zip into this take — it gets checked and exported here.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="stage hidden" id="take-panel">
+    <div class="take-head">
+      <input class="title-input" id="t-name" maxlength="80" aria-label="name">
+      <span class="badge" id="t-badge"></span>
+      <span class="meta" id="t-meta"></span>
+      <label id="person-picker" class="hidden"><span data-i18n="person">Person</span>
+        <select id="person-select" aria-label="Person"></select></label>
+      <span class="grow"></span>
+      <button class="ghost small" id="t-delete" data-i18n="delete">Delete</button>
+    </div>
+    <div class="job hidden" id="job">
+      <div class="bar"><i id="job-bar"></i></div>
+      <span id="job-text"></span>
+      <button class="ghost small" id="job-cancel" data-i18n="cancel">Cancel</button>
+    </div>
+    <div class="waiting hidden" id="t-waiting">
+      <p data-i18n="waiting_colab">Waiting for the result from Colab. Run the notebook with this video, then drop the *_mocapgate.zip here.</p>
+      <label class="drop" id="attach-drop" tabindex="0"><input type="file" id="attach-input" multiple accept=".zip,.json,.pt,.npz,video/*" hidden>
+        <span data-i18n="attach_hint">Drop the Colab result (.zip or .mocapgate.json + .mp4)</span></label>
+      <div class="btns"><button class="small" id="open-colab-2" data-i18n="open_colab">Open in Colab</button></div>
+    </div>
+    <div class="error hidden" id="t-error"></div>
+
+    <div class="viewer" id="t-viewer">
+      <div class="video-col">
+        <div class="video-wrap" id="video-wrap">
+          <video id="video" playsinline muted preload="auto"></video>
+          <canvas id="overlay"></canvas>
+          <div class="novideo hidden" id="novideo" data-i18n="no_video">No video in this take — the 3D view plays on its own.</div>
+        </div>
+        <canvas id="strip" height="14" title=""></canvas>
+        <div class="transport">
+          <button class="small" id="play" aria-label="play">▶</button>
+          <input type="range" id="seek" min="0" max="1000" value="0" aria-label="seek">
+          <span class="mono" id="time">0 / 0</span>
+          <select id="speed" aria-label="speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option></select>
+        </div>
+        <div class="layers">
+          <label><input type="checkbox" id="show-detected" checked> <span data-i18n="layer_detected">Points found on the video</span> <i class="sw cyan"></i></label>
+          <label><input type="checkbox" id="show-skeleton" checked> <span data-i18n="layer_skeleton">Our skeleton projected back</span> <i class="sw orange"></i></label>
+        </div>
+      </div>
+      <div class="three-col">
+        <div class="three" id="three"></div>
+        <label id="surface-mode-wrap" class="hidden"><span data-i18n="o_view_mode">3D view</span>
+          <select id="surface-mode"><option value="surface" data-i18n="o_view_surface">Body</option>
+            <option value="bones" data-i18n="o_view_bones">Bones</option><option value="both" data-i18n="o_view_both">Body + bones</option></select>
+        </label>
+        <small data-i18n="three_hint">Drag to turn, wheel to zoom. The grid is the floor, 1 m cells.</small>
+        <details id="skeleton-panel" class="skeleton-panel hidden">
+          <summary data-i18n="skeleton_structure">Skeleton structure</summary>
+          <small data-i18n="skeleton_tip_hint">Terminal joints are fixed endpoints, not independently tracked.</small>
+          <div id="skeleton-tree"></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="below">
+      <section class="report" id="report">
+        <h3 data-i18n="check_title">How well the video was caught</h3>
+        <div class="score-row"><div class="score" id="score">–</div><p id="verdict"></p></div>
+        <ul class="items" id="items"></ul>
+      </section>
+      <section class="redo">
+        <h3 data-i18n="tune_title">Tune and process again</h3>
+        <div class="opt-grid" id="take-opt-grid"></div>
+        <button id="reprocess" data-i18n="reprocess">Process again</button>
+        <h3 data-i18n="export_title">Export</h3>
+        <small id="export-person-hint" class="hidden"></small>
+        <div class="btns col">
+            <a class="button hidden" id="dl-capture" data-i18n="o_details">Hands / face data (JSON)</a>
+          <a class="button primary" id="dl-bvh" data-i18n="dl_bvh">Download BVH</a>
+          <button id="make-fbx" data-i18n="make_fbx">Make FBX (Maya, Unity, Unreal)</button>
+          <a class="button hidden" id="dl-fbx" data-i18n="dl_fbx">Download FBX</a>
+          <button id="open-blender" data-i18n="open_blender">Open in Blender</button>
+          <button class="hidden" id="open-maya" data-i18n="open_maya">Open FBX in Maya</button>
+          <button class="ghost" id="reveal" data-i18n="reveal">Show in folder</button>
+        </div>
+        <small data-i18n="export_hint">Blender: File → Import → Motion Capture (.bvh), Scale 0.01. Maya: import the FBX, then HumanIK to retarget.</small>
+          <small id="capture-summary"></small>
+      </section>
+    </div>
+  </section>
+</main>
+
+<!-- ======================================================== Камера -->
+<main class="view hidden" id="view-camera">
+  <section class="stage cam">
+    <div class="cam-main">
+      <div class="video-wrap cam-wrap" id="cam-wrap">
+        <video id="cam" playsinline muted autoplay></video>
+        <canvas id="cam-overlay"></canvas>
+        <div class="countdown hidden" id="countdown"></div>
+        <div class="rec hidden" id="rec-dot">● <span id="rec-time">0:00</span></div>
+        <div class="cam-off" id="cam-off"><p data-i18n="cam_off">The camera is off.</p>
+          <button class="primary" id="cam-start" data-i18n="cam_start">Turn on the camera</button>
+          <small id="cam-err"></small></div>
+      </div>
+      <video id="rec-preview" class="hidden" controls playsinline></video>
+    </div>
+    <aside class="cam-side">
+      <label class="field"><span data-i18n="cam_device">Camera</span><select id="cam-device"></select></label>
+      <div class="row2">
+        <label class="field"><span data-i18n="cam_res">Resolution</span><select id="cam-res">
+          <option>640x480</option><option selected>1280x720</option><option>1920x1080</option></select></label>
+        <label class="field"><span>FPS</span><select id="cam-fps"><option>24</option><option selected>30</option><option>60</option></select></label>
+      </div>
+      <label class="field"><span data-i18n="cam_countdown">Countdown, s</span><select id="cam-cd"><option>0</option><option selected>3</option><option>5</option><option>10</option></select></label>
+      <label class="check"><input type="checkbox" id="live-check" checked> <span data-i18n="live_check">Live check: skeleton and hints</span></label>
+      <ul class="hints" id="live-hints"></ul>
+      <div class="btns col">
+        <button class="primary rec-btn" id="rec" disabled data-i18n="rec_start">● Record</button>
+        <button class="hidden" id="rec-stop" data-i18n="rec_stop">■ Stop</button>
+      </div>
+      <div class="hidden" id="rec-done">
+        <label class="field"><span data-i18n="take_name">Name</span><input id="rec-name" maxlength="80"></label>
+        <div class="btns col">
+          <button class="primary" id="rec-use" data-i18n="rec_use">Make a take from it</button>
+          <button class="ghost" id="rec-again" data-i18n="rec_again">Record again</button>
+        </div>
+        <small data-i18n="rec_backend_hint">The take uses the recognition chosen in Settings; you can change it on the take.</small>
+      </div>
+      <details class="tips"><summary data-i18n="tips_title">How to film for good mocap</summary>
+        <ul><li data-i18n="tip_1">The whole body in frame, head to feet, with a little room around.</li>
+          <li data-i18n="tip_2">Camera at waist height, still (a tripod or a shelf).</li>
+          <li data-i18n="tip_3">Even light, no strong backlight; clothes that contrast with the background.</li>
+          <li data-i18n="tip_4">Start and end in a T-pose or standing still for a second.</li>
+          <li data-i18n="tip_5">One person in frame; avoid baggy clothes that hide the knees and elbows.</li></ul>
+      </details>
+    </aside>
+  </section>
+</main>
+
+<!-- ======================================================== Статус -->
+<main class="view hidden" id="view-status">
+  <section class="stage wide-stage">
+    <div class="panel-heading">
+      <h1 data-i18n="status_title">Status &amp; AI</h1>
+      <p data-i18n="status_sub">What is found on this computer, what is missing and how to add it.</p>
+      <button class="ghost small" id="refresh" data-i18n="refresh">Check again</button>
+    </div>
+    <div class="grid-cards" id="status-cards"></div>
+    <div class="job hidden" id="setup-job"><div class="bar"><i id="setup-bar"></i></div><span id="setup-text"></span></div>
+    <pre class="log hidden" id="setup-log"></pre>
+  </section>
+</main>
+
+<!-- ======================================================== Настройки -->
+<main class="view hidden" id="view-settings">
+  <section class="stage wide-stage">
+    <div class="panel-heading"><h1 data-i18n="settings_title">Settings</h1>
+      <p id="settings-file"></p></div>
+    <div class="settings-grid">
+      <label class="field"><span data-i18n="set_lang">Language</span>
+        <select id="s-lang"><option value="" data-i18n="lang_auto">As the system</option><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <label class="field"><span data-i18n="set_library">Takes folder</span><input id="s-library" placeholder="~/Documents/MoCapGate Takes"></label>
+      <label class="field"><span data-i18n="set_backend">Recognition by default</span>
+        <select id="s-backend"><option value="mediapipe">MediaPipe</option><option value="gvhmr-colab">GVHMR · Colab</option><option value="gvhmr-local">GVHMR · local</option></select></label>
+      <div class="opt-grid span2" id="settings-opt-grid"></div>
+      <label class="field"><span data-i18n="set_smplx">SMPL-X model (exact bone lengths for GVHMR)</span><input id="s-smplx" placeholder="…/SMPLX_NEUTRAL.npz"></label>
+      <label class="field"><span data-i18n="set_blender">Blender (if not found by itself)</span><input id="s-blender" placeholder="/Applications/Blender.app/Contents/MacOS/Blender"></label>
+      <label class="field"><span data-i18n="set_maya">Maya (optional)</span><input id="s-maya"></label>
+      <label class="field"><span data-i18n="set_gvhmr_dir">GVHMR folder (NVIDIA GPU)</span><input id="s-gvhmr-dir" placeholder="~/GVHMR"></label>
+      <label class="field"><span data-i18n="set_gvhmr_py">Python of the GVHMR environment</span><input id="s-gvhmr-py" placeholder="~/miniconda3/envs/gvhmr/bin/python"></label>
+    </div>
+    <div class="actions"><button class="primary" id="s-save" data-i18n="save">Save</button><span class="hint" id="s-saved"></span></div>
+  </section>
+</main>
+
+<div class="toast hidden" id="toast"></div>
+<script type="module" src="/ui/studio.js"></script>
+</body>
+</html>

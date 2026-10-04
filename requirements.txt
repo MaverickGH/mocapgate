@@ -1,0 +1,9 @@
+# MoCapGate не требует pip-зависимостей: ядро, CLI и Studio работают на стандартной библиотеке Python 3.9+.
+#
+# Распознавание позы ставится самим приложением в отдельный venv (~/.cache/mocapgate/mediapipe):
+#   Studio → «Статус и ИИ» → MediaPipe → Установить   или   python3 mocapgate.py setup mediapipe
+#   (mediapipe 0.10.21 + opencv-python-headless, Apache-2.0; нужен uv)
+#
+# Необязательно, в системный Python:
+#   numpy   — точные длины костей из SMPLX_NEUTRAL.npz (--smplx-model) и чтение .npz
+#   torch   — чтение hmr4d_results.pt GVHMR напрямую (иначе — .json из Colab-ноутбука)

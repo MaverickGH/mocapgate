@@ -1,0 +1,41 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+._*
+# входные видео и выгрузки не коммитим
+samples/*
+!samples/.gitkeep
+!samples/make_smpl_walk.py
+*.bvh
+*.mp4
+!tests/fixtures/sports2d/two_people.mp4
+*.mov
+*.m4v
+*.mkv
+*.avi
+*.webm
+
+# пользовательские модели, веса, конфигурация и учётные данные
+*.npz
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.task
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+MoCapGate Takes/
+.cache/
+apps/studio/desktop/runtime/
+
+# сборки приложения
+dist/
+apps/studio/desktop/node_modules/
+apps/studio/desktop/src-tauri/target/
+apps/studio/desktop/src-tauri/gen/
+.claude/launch.json
+!examples/sports2d/*.bvh

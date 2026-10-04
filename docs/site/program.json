@@ -1,0 +1,106 @@
+{
+  "slug": "mocapgate",
+  "title": "MoCapGate — мокап из видео",
+  "status": "draft",
+  "categoryId": "8b1c5c8d-b456-4ee7-9653-01e28c9e598d",
+  "worldId": "ai-engineering",
+  "level": "Beginner",
+  "format": "self-paced",
+  "durationHours": 2,
+  "summary": "Наш инструмент markerless-мокапа: сними человека на телефон или веб-камеру — получи анимацию скелета BVH/FBX для Blender, Maya и движков. MediaPipe локально или GVHMR на GPU, с проверкой качества.",
+  "descriptionMd": "## MoCapGate — мокап из видео в Blender, Maya и движки\n\nСними человека на телефон или веб-камеру — получи анимацию скелета **BVH / FBX**. Без костюмов, маркеров и студии: всё считается на твоём компьютере, видео никуда не уходит. Родственник [MeshGate](https://github.com/MaverickGH/meshgate): MeshGate переносит меши, MoCapGate — движение.\n\n### ⬇️ Скачать\n- **macOS (Apple Silicon)** — DMG, **Mac на Intel** и **Windows** — быстрый старт (ZIP: приложение + установка распознавания в один клик), **Linux / любая ОС** — переносная версия.\n- Все файлы и контрольные суммы — [релиз mocapgate-v0.3.1](https://github.com/MaverickGH/app-releases/releases/tag/mocapgate-v0.3.1). Исходники (MIT) — [MaverickGH/mocapgate](https://github.com/MaverickGH/mocapgate).\n\n### Что умеет\n- **Видео → движение всего тела.** MediaPipe прямо на компьютере (без видеокарты) или **GVHMR** (SIGGRAPH Asia 2024) — лучшее качество, на бесплатном GPU Google Colab или своей NVIDIA.\n- **Камера в приложении** с живой проверкой: скелет поверх картинки и подсказки «всё тело в кадре / далеко / темно».\n- **Несколько людей** в кадре, **пальцы рук** и **лицо** (по желанию).\n- **Проверка дубля:** балл, видео с наложенным скелетом, 3D-просмотр, советы — что переснять.\n- **Чистка:** сглаживание, фиксация стоп на полу, режим «верх тела» для съёмки за столом.\n- **Экспорт:** BVH, FBX через Blender, кости в стиле **Mixamo** — авто-ретаргет Blender и HumanIK в Maya их понимают.\n\n### Требования\nmacOS 11+, Windows 10/11 или Linux; Python 3.9+ (быстрый старт ставит всё сам). Blender — для FBX. GVHMR и модель тела SMPL-X — только для некоммерческого использования.\n\n---\n\n## MoCapGate — motion capture from video\n\nFilm a person with a phone or webcam and get a skeleton animation (BVH / FBX) for Blender, Maya and game engines. MediaPipe runs locally without a GPU; GVHMR gives the best quality on a free Colab GPU or your NVIDIA card. In-app camera with a live framing check, several people, fingers and face, a quality check with advice, foot locking, Mixamo-style bone names. Downloads: [mocapgate-v0.3.1](https://github.com/MaverickGH/app-releases/releases/tag/mocapgate-v0.3.1). Source (MIT): [MaverickGH/mocapgate](https://github.com/MaverickGH/mocapgate).",
+  "audience": "Аниматоры, инди-разработчики игр и 3D-художники, кому нужна анимация персонажа из обычного видео без мокап-студии.",
+  "outcomes": [
+    "Ставит MoCapGate Studio и распознавание позы на свой компьютер",
+    "Снимает дубль так, чтобы мокап получился чистым",
+    "Читает проверку дубля и знает, что переснять",
+    "Получает лучшее качество через GVHMR в Google Colab",
+    "Забирает анимацию в Blender и Maya (BVH, FBX, ретаргет)"
+  ],
+  "prerequisites": [
+    "macOS 11+, Windows 10/11 или Linux",
+    "Камера телефона или веб-камера",
+    "Blender — для FBX и ретаргета (по желанию)"
+  ],
+  "tags": [
+    "mocap",
+    "animation",
+    "blender",
+    "maya",
+    "gamedev",
+    "ai"
+  ],
+  "modules": [
+    {
+      "id": "m1",
+      "kind": "text",
+      "title": "Что такое MoCapGate",
+      "summary": "Видео → поза → скелет SMPL → BVH/FBX. Чем MediaPipe отличается от GVHMR и когда что брать.",
+      "estimatedMinutes": 10
+    },
+    {
+      "id": "m2",
+      "kind": "external",
+      "url": "https://github.com/MaverickGH/app-releases/releases/download/mocapgate-v0.3.1/MoCapGate.Studio_0.3.1_aarch64.dmg",
+      "title": "macOS · Apple Silicon",
+      "summary": "DMG: перетащить в «Программы», первый запуск — правый клик → «Открыть». Распознавание ставится в «Статус и ИИ».",
+      "estimatedMinutes": 0
+    },
+    {
+      "id": "m3",
+      "kind": "external",
+      "url": "https://github.com/MaverickGH/app-releases/releases/download/mocapgate-v0.3.1/MoCapGate-0.3.1-macos-x64-quickstart.zip",
+      "title": "macOS · Intel",
+      "summary": "Быстрый старт: распаковать и открыть INSTALL.command — приложение, Python и MediaPipe ставятся сами.",
+      "estimatedMinutes": 0
+    },
+    {
+      "id": "m4",
+      "kind": "external",
+      "url": "https://github.com/MaverickGH/app-releases/releases/download/mocapgate-v0.3.1/MoCapGate-0.3.1-windows-quickstart.zip",
+      "title": "Windows 10/11",
+      "summary": "Быстрый старт: распаковать и дважды нажать INSTALL.cmd. Права администратора не нужны.",
+      "estimatedMinutes": 0
+    },
+    {
+      "id": "m5",
+      "kind": "external",
+      "url": "https://github.com/MaverickGH/app-releases/releases/download/mocapgate-v0.3.1/MoCapGate-0.3.1-portable.zip",
+      "title": "Linux и любая ОС · переносная",
+      "summary": "Без установки: распаковать и выполнить python3 mocapgate.py studio — откроется в браузере.",
+      "estimatedMinutes": 0
+    },
+    {
+      "id": "m6",
+      "kind": "text",
+      "title": "Первый дубль: съёмка и проверка",
+      "summary": "Всё тело в кадре, камера неподвижна, ровный свет. Запись в приложении, балл, оверлей и советы.",
+      "estimatedMinutes": 25
+    },
+    {
+      "id": "m7",
+      "kind": "text",
+      "title": "Лучшее качество: GVHMR в Colab",
+      "summary": "Ноутбук на бесплатном GPU: модель SMPL-X (бесплатная регистрация), видео, архив результата — обратно в дубль.",
+      "estimatedMinutes": 30
+    },
+    {
+      "id": "m8",
+      "kind": "text",
+      "title": "Анимация в Blender и Maya",
+      "summary": "BVH в Blender (Scale 0.01), FBX в Maya, ретаргет через Auto-Rig Pro / Rokoko / HumanIK, кости в стиле Mixamo.",
+      "estimatedMinutes": 30
+    },
+    {
+      "id": "m9",
+      "kind": "external",
+      "url": "https://github.com/MaverickGH/mocapgate",
+      "title": "Исходники на GitHub",
+      "summary": "Код MIT: ядро на стандартной библиотеке Python, Studio, Colab-ноутбук, тесты.",
+      "estimatedMinutes": 5
+    }
+  ],
+  "featured": false,
+  "sortOrder": 20,
+  "priceNote": "бесплатно, open-source (MIT)"
+}

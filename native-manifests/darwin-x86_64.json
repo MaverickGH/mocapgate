@@ -1,0 +1,57 @@
+{
+  "format": "mocapgate.native/1",
+  "python": "3.12.13",
+  "abi": "cpython-312",
+  "system": "darwin",
+  "machine": "x86_64",
+  "modules": {
+    "cli": {
+      "source": "mocapgate.py",
+      "module": "_mocapgate_native_cli",
+      "library": "darwin-x86_64___mocapgate_native_cli.cpython-312-darwin.so",
+      "sha256": "6d74da8a82666f2ba8a07ed673e69823fbc3926c61ecef6ecd87890ef8d5db7a"
+    },
+    "server": {
+      "source": "apps/studio/server.py",
+      "module": "_mocapgate_native_server",
+      "library": "apps/studio/darwin-x86_64___mocapgate_native_server.cpython-312-darwin.so",
+      "sha256": "168fc3915d6d93dcab487ef3c19a4f04b2c194bbd953d02e2456cdc01df340f8"
+    },
+    "pipeline": {
+      "source": "core/pipeline.py",
+      "module": "_mocapgate_native_pipeline",
+      "library": "core/darwin-x86_64___mocapgate_native_pipeline.cpython-312-darwin.so",
+      "sha256": "22340efbc761c9b59b3634a292f71269aec09d321028eaf2a10a789fd5640e98"
+    },
+    "retarget": {
+      "source": "core/retarget.py",
+      "module": "_mocapgate_native_retarget",
+      "library": "core/darwin-x86_64___mocapgate_native_retarget.cpython-312-darwin.so",
+      "sha256": "7418c7799d7f26bcefc3070395da14603709f0a4c0fe262afbea0067e0ad5b16"
+    },
+    "cleanup": {
+      "source": "core/cleanup.py",
+      "module": "_mocapgate_native_cleanup",
+      "library": "core/darwin-x86_64___mocapgate_native_cleanup.cpython-312-darwin.so",
+      "sha256": "357a4fb1b383602c7dd787843926e843a4768181a67f78bbbe265fed9fa52b0b"
+    },
+    "report": {
+      "source": "core/report.py",
+      "module": "_mocapgate_native_report",
+      "library": "core/darwin-x86_64___mocapgate_native_report.cpython-312-darwin.so",
+      "sha256": "0bb3175d7395d8c4be8cfdf8a113fd77cd49c73f17dc8b02f3790aec7aa9c5d6"
+    },
+    "components": {
+      "source": "core/components.py",
+      "module": "_mocapgate_native_components",
+      "library": "core/darwin-x86_64___mocapgate_native_components.cpython-312-darwin.so",
+      "sha256": "a2d8cf571c9353ecb7a454d08c5fd60ba2e779eb374b21d526af6bcc94bb2cc4"
+    },
+    "details": {
+      "source": "core/details.py",
+      "module": "_mocapgate_native_details",
+      "library": "core/darwin-x86_64___mocapgate_native_details.cpython-312-darwin.so",
+      "sha256": "033d468cd9341b720210a8bd4ccf73ad5acf641237a48a9446c9789d5c81f15e"
+    }
+  }
+}

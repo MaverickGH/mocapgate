@@ -1,0 +1,57 @@
+{
+  "format": "mocapgate.native/1",
+  "python": "3.12.13",
+  "abi": "cpython-312",
+  "system": "win32",
+  "machine": "x86_64",
+  "modules": {
+    "cli": {
+      "source": "mocapgate.py",
+      "module": "_mocapgate_native_cli",
+      "library": "win32-x86_64___mocapgate_native_cli.cp312-win_amd64.pyd",
+      "sha256": "00d73006fff92f6d302921df912c032ad794133ccd1169ab55d5dc358999b126"
+    },
+    "server": {
+      "source": "apps/studio/server.py",
+      "module": "_mocapgate_native_server",
+      "library": "apps/studio/win32-x86_64___mocapgate_native_server.cp312-win_amd64.pyd",
+      "sha256": "4d116c45463c1e7abe31a141607f1b7f05bd594f612c89b1dff8274fd4cc7b51"
+    },
+    "pipeline": {
+      "source": "core/pipeline.py",
+      "module": "_mocapgate_native_pipeline",
+      "library": "core/win32-x86_64___mocapgate_native_pipeline.cp312-win_amd64.pyd",
+      "sha256": "64d5077e86cde8ffbce1c0fa242dc250b63890c84f7c9267c23abc7615192d68"
+    },
+    "retarget": {
+      "source": "core/retarget.py",
+      "module": "_mocapgate_native_retarget",
+      "library": "core/win32-x86_64___mocapgate_native_retarget.cp312-win_amd64.pyd",
+      "sha256": "470db925a02f4486ba4645558220cd3961786b589771e57650be7cea780172b5"
+    },
+    "cleanup": {
+      "source": "core/cleanup.py",
+      "module": "_mocapgate_native_cleanup",
+      "library": "core/win32-x86_64___mocapgate_native_cleanup.cp312-win_amd64.pyd",
+      "sha256": "ced27f2c80086ceac739802d0ffe162912963c0557be7f65ed6407ffeb84d69e"
+    },
+    "report": {
+      "source": "core/report.py",
+      "module": "_mocapgate_native_report",
+      "library": "core/win32-x86_64___mocapgate_native_report.cp312-win_amd64.pyd",
+      "sha256": "356d76c93c3a9fa3ee111a9b110a56a2f6314e87c7e688edc94bec8bd172d48d"
+    },
+    "components": {
+      "source": "core/components.py",
+      "module": "_mocapgate_native_components",
+      "library": "core/win32-x86_64___mocapgate_native_components.cp312-win_amd64.pyd",
+      "sha256": "e80983676a9fcfeee0ea856d3eb4eac8d5c87baa9f48691053cf0c26a588aef4"
+    },
+    "details": {
+      "source": "core/details.py",
+      "module": "_mocapgate_native_details",
+      "library": "core/win32-x86_64___mocapgate_native_details.cp312-win_amd64.pyd",
+      "sha256": "0ce1c671e8e66bb984b1f4fcb6b2fd6ff5f508b04b500ecb851e44f9cbc76904"
+    }
+  }
+}

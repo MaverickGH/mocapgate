@@ -1,0 +1,22 @@
+name: public-native-check
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel, windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python -m pip install uv==0.12.19
+      - run: uv python install 3.12.13
+      - run: uv run --python 3.12.13 --no-project python tests/test_bundle.py .
+      - run: uv run --python 3.12.13 --no-project python -m unittest discover tests
