@@ -20,6 +20,9 @@ Independent native CI builds and unpacked-package tests passed on all four targe
 | Pre-push: safe root accepted; leaked source and unsafe ancestor rejected | Passed |
 | Backup: bundle restoration, git fsck, all 26 file hashes | Passed |
 | Windows x64 / Intel macOS / Linux x64 native builds | Passed, including bundled runtime, Blender FBX and native unit tests |
+| Installed Windows EXE and extracted Linux DEB resources | Passed |
+| Final AppImage after ELF relocation and repacking | Passed |
+| Public snapshot on all four platforms | Passed |
 | Desktop GUI walkthrough, signing and notarization | Not verified |
 
 The Sports2D quality score was 32/100. This verifies execution and identities,
@@ -50,3 +53,13 @@ because runtime terminfo filenames can differ only in letter case.
 The [public platform catalog check](https://github.com/MaverickGH/app-releases/actions/runs/37204234987) passed on all four targets. It verifies that a cloned public
 snapshot selects the correct native implementation and runs the Studio/package
 smoke checks and unit suite with CPython 3.12.13.
+
+[Installed Windows EXE and Linux DEB checks](https://github.com/MaverickGH/app-releases/actions/runs/37204592203) passed, including Blender FBX.
+[Final AppImage check](https://github.com/MaverickGH/app-releases/actions/runs/37204559757) passed twice, before and after repacking. linuxdeploy changes ELF RPATH,
+so the AppImage manifest records the final library hashes; standalone ZIPs and
+the DEB preserve their original library hashes.
+
+The public main/test-pc branches now contain the native distribution history.
+Legacy v0.3.0/v0.3.1 tags contain isolated archival descriptions, while previous
+release assets retain their IDs and sizes. The full original source history is
+backed up locally and archived in the private source repository.
