@@ -1,14 +1,19 @@
-"""Approximate finger articulation in the body's wrist frame.
+"""Finger articulation and hand-corrected wrists in the body's wrist frame.
 
-Hand world points are palm-centred metres. Palm orientation is removed before
-retargeting so camera/world orientation does not leak into local finger angles.
-Wrist orientation remains supplied by the body tracker. No inferred toes.
+Fingers come from MediaPipe hand world landmarks through an anatomical model
+(core.hand_fit): flexion/abduction per joint, clamped, no twist, no hyperextension.
+Outlier frames are rejected, gaps ease to a relaxed curl. When the body's camera-space
+pose is known (params with incam / cam_to_yup / camera), a visible palm also corrects the
+wrist relative to the forearm, blended by confidence. Wrists are always clamped to
+anatomical ranges. No inferred toes.
 """
 import math
 from core.skeleton import Joint
-from core.rotations import frame_from_axes, transpose, mat_vec, swing, matmul, matrix_to_euler_zxy, continuous_euler
+from core.rotations import (frame_from_axes, transpose, mat_vec, matmul, matrix_to_euler_zxy, euler_zxy_to_matrix,
+                            continuous_euler)
+from core import hand_fit
 
-FINGERS = (('Thumb', 1), ('Index', 5), ('Middle', 9), ('Ring', 13), ('Pinky', 17))
+FINGERS = hand_fit.FINGERS
 IDENTITY = ((1.,0.,0.),(0.,1.,0.),(0.,0.,1.))
 
 
@@ -22,48 +27,57 @@ def palm_points(world, side):
     return [[sign*q[0], q[1], sign*q[2]] for p in world for q in [mat_vec(basis, sub(p,world[0]))]]
 
 
-def add_fingers(root, frames, details, fps):
+def add_fingers(root, frames, details, fps, params=None):
+    """params (optional): SMPL parameters of the person; enables wrist correction from the palm."""
     joints = {}
     def walk(j):
         joints[j.name] = j
         for c in j.children: walk(c)
     walk(root)
+    forearms = hand_fit.forearm_rotations(params) if params else None
+    K = (params or {}).get('K')
     for side, prefix in (('left','Left'), ('right','Right')):
         wrist = joints[prefix+'Hand']; wrist.end_offset = None
-        sign = 1 if side == 'left' else -1
         chains = []
-        for index, (finger, start) in enumerate(FINGERS):
-            # Stable adult-sized rest rig; observed motion changes rotations, not bone lengths.
-            base = (sign*(.025 if finger=='Thumb' else .065), (.035,.025,0.,-.02,-.04)[index], 0.)
-            lengths = (.032,.025,.022) if finger=='Thumb' else (.035,.025,.02)
+        for finger, start, base, direction, lengths in hand_fit.rig(side):
+            # Stable adult-sized rest rig (SMPL T-pose hand: palm down, thumb forward).
             chain = []; parent = wrist
             for k in range(3):
-                name = f'{prefix}Hand{finger}{k+1}'
-                offset = base if k==0 else (sign*lengths[k-1],0.,0.)
-                child = Joint(name, tuple(v*100 for v in offset))
+                offset = base if k == 0 else tuple(v*lengths[k-1] for v in direction)
+                child = Joint(f'{prefix}Hand{finger}{k+1}', tuple(v*100 for v in offset))
                 parent.children.append(child); parent = child; chain.append(child)
-            parent.end_offset = (sign*lengths[2]*100,0.,0.)
-            chains.append((start,chain))
-        previous = {}; last = None; last_frame = -1000
-        for f, frame in enumerate(frames):
+            parent.end_offset = tuple(v*lengths[2]*100 for v in direction)
+            chains.append(chain)
+        raw = []
+        for f in range(len(frames)):
             d = details[f] if f < len(details) else None
-            hand = (d or {}).get('hands',{}).get(side)
-            points = palm_points(hand['world'],side) if hand else None
-            if points:
-                last, last_frame = points, f
-            elif f-last_frame <= round(fps*.15):
-                points = last
-            for start, chain in chains:
-                parent_rotation = IDENTITY
-                for k,joint in enumerate(chain):
-                    rest = (sign,0.,0.)
-                    if points:
-                        a,b = points[start+k],points[start+k+1]
-                        direction = mat_vec(transpose(parent_rotation),[b[i]-a[i] for i in range(3)])
-                        rotation = swing(rest,direction)
-                    else:
-                        rotation = IDENTITY
-                    parent_rotation = matmul(parent_rotation,rotation)
-                    e = continuous_euler(matrix_to_euler_zxy(rotation),previous.get(joint.name))
-                    previous[joint.name] = e; frame[joint.name] = {'rot':e}
+            hand = (d or {}).get('hands', {}).get(side)
+            result = hand_fit.fit(hand['world'], side) if hand and hand.get('world') else None
+            raw.append({'pose': result[0], 'size': result[1], 'flipped': result[2], 'score': hand.get('score', 1.),
+                        'hand': hand} if result else None)
+        poses, ok = hand_fit.track(raw, fps)
+        weights = hand_fit.wrist_weights(raw, ok, fps)
+        previous = {}; desired = None
+        for f, frame in enumerate(frames):
+            data = frame.get(prefix+'Hand')
+            if data is not None:
+                local = euler_zxy_to_matrix(*data['rot'])
+                if forearms and f < len(forearms):
+                    if ok[f]:
+                        hand = raw[f]['hand']
+                        G = hand_fit.hand_rotation_camera(hand['world'], side, hand.get('image'), K)
+                        desired = matmul(transpose(forearms[f][side]), G)
+                    if desired is not None and weights[f] > 0:
+                        local = hand_fit.blend_rotation(local, desired, weights[f])
+                local = hand_fit.clamp_wrist(local, side)
+                e = continuous_euler(matrix_to_euler_zxy(local), previous.get(wrist.name))
+                previous[wrist.name] = e; data['rot'] = e
+            for chain, rotations in zip(chains, _chunks(hand_fit.pose_rotations(poses[f], side), 3)):
+                for joint, rotation in zip(chain, rotations):
+                    e = continuous_euler(matrix_to_euler_zxy(rotation), previous.get(joint.name))
+                    previous[joint.name] = e; frame[joint.name] = {'rot': e}
     return root, frames
+
+
+def _chunks(items, size):
+    return [items[i:i+size] for i in range(0, len(items), size)]

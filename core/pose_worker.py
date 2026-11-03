@@ -12,6 +12,7 @@ world — метры, начало в центре бёдер, X вправо н
 """
 from __future__ import annotations
 import argparse, json, sys
+from pathlib import Path
 if __package__:
     from .person_tracking import PoseTracker
     from .person_detector import PersonDetector
@@ -52,7 +53,7 @@ def main() -> int:
     width, height = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     opts = vision.PoseLandmarkerOptions(
-        base_options=mpt.BaseOptions(model_asset_path=args.model),
+        base_options=mpt.BaseOptions(model_asset_buffer=Path(args.model).read_bytes()),  # путь с не-ASCII символами MediaPipe на Windows не открывает
         running_mode=vision.RunningMode.IMAGE if args.max_people > 1 else vision.RunningMode.VIDEO,
         num_poses=1,
         min_pose_detection_confidence=0.5,

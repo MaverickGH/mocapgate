@@ -18,19 +18,35 @@ DEFAULTS: dict = {
     "mixamo_namespace": False, # добавить mixamorig: к именам экспортированных костей
     "max_people": 4,            # maximum simultaneous people (1…8)
     "lang": "",                 # "" — по языку системы/браузера; "ru" | "en"
+    "check_updates": True,      # раз в 6 ч спрашивать GitHub о новой версии (без данных о пользователе)
     "library": "",              # "" — ~/Documents/MoCapGate Takes
-    "backend": "mediapipe",     # mediapipe | gvhmr-colab | gvhmr-local
+    "backend": "gvhmr-colab",   # legacy MediaPipe remains readable for old takes
+    "hand_stability": True,
+    "gemx_quality": "fast",     # быстро (ONNX) / точно / максимум — значения по умолчанию для новых дублей GEM-X
+    "gemx_chunk_seconds": -1,   # −1 — части по свободной памяти, 0 — целиком, N — по N с
+    "gemx_fps": 30,             # 30 — частота распознавания по умолчанию; 0 — как у видео (до 60)
+    "recognition_max_px": 1920, # длинная сторона видео для распознавания; 0 — исходный размер
+    "gvhmr_hands": "auto",      # кисти дублей GVHMR: auto (GEM-X, если установлен) | gemx | mediapipe
+    "smooth_body": 0.0,         # сглаживание дрожания тела 0…1 (One-Euro), 0 — как распознано
+    "smooth_hands": 0.45,       # консервативное двустороннее сглаживание вращений пальцев
     "pose_model": "heavy",      # lite | full | heavy (MediaPipe)
     "smoothing": 0.5,           # 0…1
     "root": "image",            # image — траектория из кадра; inplace — на месте
     "foot_lock": True,          # фиксация стоп (не скользят по полу)
     "focal_mm": 0.0,            # фокус камеры, мм 35-мм экв.; 0 — подобрать автоматически
     "space": "global",          # GVHMR: global | incam
+    "model_python": "",         # managed CPU runtime for SMPL-X on any supported desktop
     "smplx_model": "",          # путь к SMPLX_NEUTRAL.npz (точные кости)
     "gvhmr_dir": "",            # GVHMR на этом компьютере (нужен NVIDIA GPU)
+    "gvhmr_wsl": "",            # managed WSL distribution; empty for native Linux
     "gvhmr_python": "",         # python окружения GVHMR
     "blender": "",              # путь к Blender, если не нашёлся сам
     "maya": "",
+    "rig_profile": "",
+    "maya_rig": "builtin",      # builtin Man_Rig, empty: capture skeleton, or custom .ma
+    "gemx_dir": "",
+    "gemx_python": "",
+    "gemx_wsl": "",
     "camera_id": "",            # последняя выбранная камера
     "camera_fps": 30,
     "camera_res": "1280x720",
@@ -77,12 +93,14 @@ def save(changes: dict) -> dict:
         data[k] = v
     if data["lang"] not in ("", "ru", "en"):
         raise ValueError("lang: ru или en")
-    if data["backend"] not in ("mediapipe", "gvhmr-colab", "gvhmr-local"):
-        raise ValueError("backend: mediapipe | gvhmr-colab | gvhmr-local")
+    if data["backend"] not in ("mediapipe", "gvhmr-colab", "gvhmr-local", "gemx-local"):
+        raise ValueError("backend: mediapipe | gvhmr-colab | gvhmr-local | gemx-local")
     if data["pose_model"] not in ("lite", "full", "heavy"):
         raise ValueError("pose_model: lite | full | heavy")
     if data["root"] not in ("image", "inplace"):
         raise ValueError("root: image | inplace")
+    if data["gvhmr_hands"] not in ("auto", "gemx", "mediapipe"):
+        raise ValueError("gvhmr_hands: auto | gemx | mediapipe")
     if data["space"] not in ("global", "incam"):
         raise ValueError("space: global | incam")
     if not 1 <= data["max_people"] <= 8:

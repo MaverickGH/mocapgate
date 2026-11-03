@@ -7,6 +7,7 @@ import argparse
 import json
 import math
 from contextlib import ExitStack
+from pathlib import Path
 
 
 def owner(point, hints, key):
@@ -53,9 +54,9 @@ def main():
         return image, left, top, right-left, bottom-top
     with ExitStack() as stack:
         hands = stack.enter_context(vision.HandLandmarker.create_from_options(vision.HandLandmarkerOptions(
-            base_options=tasks.BaseOptions(model_asset_path=args.hand_model), num_hands=2))) if args.hand_model else None
+            base_options=tasks.BaseOptions(model_asset_buffer=Path(args.hand_model).read_bytes()), num_hands=2))) if args.hand_model else None
         face = stack.enter_context(vision.FaceLandmarker.create_from_options(vision.FaceLandmarkerOptions(
-            base_options=tasks.BaseOptions(model_asset_path=args.face_model), num_faces=1,
+            base_options=tasks.BaseOptions(model_asset_buffer=Path(args.face_model).read_bytes()), num_faces=1,
             output_face_blendshapes=True, output_facial_transformation_matrixes=True))) if args.face_model else None
         for i in range(length):
             ok, frame = cap.read()

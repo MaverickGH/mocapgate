@@ -36,6 +36,9 @@ def main():
     if data.get('capture_face'):
         from core.face_fit import fit
         params=fit(model,params,data.get('details'),params.get('K'))
+    if data.get('hand_stability', True):
+        from core.hand_stability import stabilize_params
+        params=stabilize_params(params,data['fps'])
     vertices=[]; joints=[]
     for start in range(0,n,16):
         end=min(n,start+16); batch=end-start
@@ -74,6 +77,8 @@ def main():
     head_top=neutral.vertices[0,neutral.vertices[0,:,1].argmax()].cpu().numpy()
     root,frames=prepare(root,frames,data.get('mixamo_namespace',False),(100*(head_top-rest[15])).tolist())
     save(output.with_suffix('.bvh'),write(root,frames,1/data['fps']))
+    from core.maya_export import write as write_maya
+    write_maya(output.with_suffix('.ma'), root, frames, data['fps'])
     output.with_suffix('.params.json').write_text(json.dumps(params,separators=(',',':')),encoding='utf-8')
     result={'format':'mocapgate.mesh/1','model':'SMPL-X neutral','fps':data['fps'],'frames':n,
         'vertex_count':len(model.v_template),'faces':model.faces.tolist(), 'positions_file':binary.name,

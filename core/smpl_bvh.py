@@ -36,7 +36,9 @@ def convert(params: dict, model_path: str | None = None, scale: float = 100.0) -
         raise ValueError(f"разная длина последовательностей: {len(go)}/{len(bp)}/{len(tr)}")
     betas = mean_betas(params.get("betas"))
 
-    rest = smpl.rest_from_model(model_path, betas) if model_path else list(smpl.DEFAULT_REST)
+    rest = params.get("rest_joints")
+    if rest is None:
+        rest = smpl.rest_from_model(model_path, betas) if model_path else list(smpl.DEFAULT_REST)
     root = smpl.build_skeleton(rest, scale)
     pelvis = rest[0]
     flip = ((1.0, 0.0, 0.0), (0.0, -1.0, 0.0), (0.0, 0.0, -1.0)) if params.get("cam_to_yup") else None

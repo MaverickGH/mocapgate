@@ -1,5 +1,7 @@
 # Выпуск MoCapGate на сайт
 
+> **Исторический документ (0.3.1).** Описывает выпуск 0.3.1; текущие версии — стабильная 0.3.2 и 0.3.3 beta, см. [README](../../README.md).
+
 Тот же путь, что у VideoText и «Разборщика»: установщики — в публичный `MaverickGH/app-releases`
 (тег `mocapgate-vX.Y.Z`), на сайте — программа в разделе «Программы» с кнопками «Скачать».
 
@@ -49,7 +51,7 @@ gh release create mocapgate-v$V -R MaverickGH/app-releases \
 Снимите человека на телефон или веб-камеру — анимация скелета BVH/FBX для Blender, Maya и движков.
 Film a person — get a BVH/FBX skeleton animation for Blender, Maya and game engines.
 - **macOS (DMG, Apple Silicon)**, **macOS Intel и Windows (быстрый старт ZIP)**, **Linux / любая ОС (переносной ZIP)**
-  → [релиз / release `mocapgate-v0.3.1`](../../releases/tag/mocapgate-v0.3.1)
+  → [релиз / release `mocapgate-v0.3.1`](https://github.com/MaverickGH/mocapgate/releases/tag/v0.3.1)
 - Исходники / source (MIT): [MaverickGH/mocapgate](https://github.com/MaverickGH/mocapgate).
   GVHMR и SMPL-X — только некоммерческое использование / non-commercial only.
 ```

@@ -14,7 +14,40 @@ from pathlib import Path
 from copy import deepcopy
 
 
-def track_configs(D, cfg, max_people, torch, fps=30):
+def watch_parent(path, timeout=20):
+    import signal
+    import threading
+    import time
+    try:
+        os.setsid()
+    except OSError:
+        pass
+    def watch():
+        previous = None
+        last_change = time.monotonic()
+        while True:
+            try:
+                current = Path(path).stat().st_mtime_ns
+            except OSError:
+                current = None
+            if current != previous:
+                last_change = time.monotonic()
+                previous = current
+            if time.monotonic() - last_change > timeout:
+                if os.getpgrp() == os.getpid():
+                    os.killpg(os.getpgrp(), signal.SIGTERM)
+                else:
+                    os.kill(os.getpid(), signal.SIGTERM)
+            time.sleep(1)
+    threading.Thread(target=watch, daemon=True).start()
+
+
+def quote_path_overrides(overrides):
+    return [key + '=' + json.dumps(value, ensure_ascii=False) if key in ('output_root','video_name') else item
+            for item in overrides for key, _, value in [item.partition('=')]]
+
+
+def track_configs(D, cfg, max_people, torch, fps=30, min_seconds=0.25):
     """Seed GVHMR's bbox cache per YOLO ID instead of selecting its top track."""
     from hmr4d.utils.seq_utils import (frame_id_to_mask, rearrange_by_mask,
                                       get_frame_id_list_from_mask, linear_interpolate_frame_ids)
@@ -28,7 +61,7 @@ def track_configs(D, cfg, max_people, torch, fps=30):
     for pid in ordered:
         # Require a quarter-second of evidence before exporting a new person.
         # A few tracker observations at the frame edge are often a split ID.
-        if len(frame_ids[pid]) < min(max(3, round(fps*.25)), length):
+        if len(frame_ids[pid]) < min(max(3, round(fps*min_seconds)), length):
             continue
         person_cfg = deepcopy(cfg)
         # Resolve interpolation before changing folders; every person shares the same video/timebase.
@@ -55,6 +88,53 @@ def track_configs(D, cfg, max_people, torch, fps=30):
     return result
 
 
+def extract_in_batches(extract, images, boxes, torch, size=4):
+    """Keep cropped video frames on CPU and send only a small batch to CUDA."""
+    return torch.cat([extract(images[start:start+size], boxes[start:start+size])
+                      for start in range(0, len(images), size)], dim=0)
+
+
+def limit_preprocess_memory(D, torch):
+    from hmr4d.utils.preproc.vitfeat_extractor import get_batch
+    class Features(D.Extractor):
+        def extract_video_features(self, video_path, bbx_xys, img_ds=0.5):
+            images, boxes = get_batch(video_path, bbx_xys, img_ds=img_ds)
+            extract = super().extract_video_features
+            return extract_in_batches(extract, images, boxes, torch)
+    class Pose(D.VitPoseExtractor):
+        def extract(self, video_path, bbx_xys, img_ds=0.5):
+            images, boxes = get_batch(video_path, bbx_xys, img_ds=img_ds)
+            extract = super().extract
+            return extract_in_batches(extract, images, boxes, torch)
+    D.Extractor, D.VitPoseExtractor = Features, Pose
+
+
+def tolerate_vo_failures(min_points=8):
+    """Оценка движения камеры (SimpleVO, pycolmap) иногда не находит геометрию пары кадров: однотонный фон,
+    смаз, мало совпадающих точек, камера почти стоит. Upstream тогда падает с
+    «'NoneType' object has no attribute 'matrix'». Для такой пары берём «без движения» (единичную матрицу) —
+    камера держит прежнее положение. Возвращает счётчик {"pairs", "failed"} для журнала."""
+    import numpy as np
+    try:
+        from hmr4d.utils.preproc.relpose import solver_two_view as sv
+    except ImportError:
+        return {"pairs": 0, "failed": 0}
+    counter = {"pairs": 0, "failed": 0}
+    original = sv.PycolmapRansacTwoViewGeometrySolver.solve
+
+    def solve(self, pts0, pts1):
+        counter["pairs"] += 1
+        try:
+            if pts0 is None or len(pts0) < min_points:
+                raise ValueError("too few matches")
+            return original(self, pts0, pts1)
+        except (AttributeError, ValueError, RuntimeError):
+            counter["failed"] += 1
+            return np.eye(4)
+    sv.PycolmapRansacTwoViewGeometrySolver.solve = solve
+    return counter
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("gvhmr_dir")
@@ -64,7 +144,11 @@ def main() -> int:
     ap.add_argument("--f-mm", type=int, default=0)
     ap.add_argument("--fps", type=float, default=30.0)
     ap.add_argument("--max-people", type=int, choices=range(1, 9), default=4)
+    ap.add_argument("--min-seconds", type=float, default=0.25)
+    ap.add_argument("--heartbeat")
     a = ap.parse_args()
+    if a.heartbeat:
+        watch_parent(a.heartbeat)
 
     gv = os.path.abspath(a.gvhmr_dir)
     video = Path(a.video).resolve().as_posix()
@@ -77,14 +161,31 @@ def main() -> int:
     import hydra  # noqa: E402
     import torch  # noqa: E402
     import demo as D  # noqa: E402  tools/demo/demo.py
+    vo_failures = tolerate_vo_failures()  # пара кадров без решения — камера на ней неподвижна, а не сбой всей обработки
 
-    cfg = D.parse_args_to_cfg()
+    if torch.cuda.get_device_properties(0).total_memory <= 10 * 1024**3:
+        limit_preprocess_memory(D, torch)
+        print("GPU: processing cropped frames in batches of 4", flush=True)
+    compose = D.compose
+    def safe_compose(*args, **kwargs):
+        kwargs['overrides'] = quote_path_overrides(kwargs.get('overrides', []))
+        return compose(*args, **kwargs)
+    D.compose = safe_compose
+    try:
+        cfg = D.parse_args_to_cfg()
+    finally:
+        D.compose = compose
     print("STAGE preprocess", flush=True)
-    tracks = track_configs(D, cfg, a.max_people, torch, a.fps) if a.max_people > 1 else [(1, cfg, 0, None)]
+    tracks = track_configs(D, cfg, a.max_people, torch, a.fps, a.min_seconds) if a.max_people > 1 else [(1, cfg, 0, None)]
     for pid, person_cfg, _, _ in tracks:
         print(f"STAGE preprocess person {pid}", flush=True)
         D.run_preprocess(person_cfg)
         torch.cuda.empty_cache()
+    if vo_failures["failed"]:
+        share = vo_failures["failed"] / max(1, vo_failures["pairs"])
+        print(f"INFO [MoCapGate] camera: {vo_failures['failed']} of {vo_failures['pairs']} frame pairs without camera "
+              f"geometry — camera held still there" + ("; if the camera did not move, enable “Static camera”" if share > 0.3 else ""),
+              flush=True)
     print("STAGE predict", flush=True)
     model = hydra.utils.instantiate(cfg.model, _recursive_=False)
     model.load_pretrained_model(cfg.ckpt_path)

@@ -4,6 +4,7 @@ from pathlib import Path
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('package', type=Path)
     ap.add_argument('--require-blender', action='store_true')
+    ap.add_argument('--blender', type=Path, help='Use this Blender only in the isolated test configuration')
     args = ap.parse_args()
     package = args.package.resolve()
     check(package)
@@ -44,6 +46,11 @@ def main():
             if (result.returncode == 0) != success:
                 raise RuntimeError(result.stdout)
             return result.stdout
+        if args.blender:
+            blender_path = args.blender.resolve()
+            if not blender_path.is_file():
+                raise ValueError('Blender executable missing: ' + str(blender_path))
+            run('-c', 'from core import settings; settings.save({"blender":' + repr(str(blender_path)) + '})')
         run('-c', "import shutil; assert shutil.which('python') is None and shutil.which('python3') is None; from native_loader import load; load('cli')")
         import platform
         arch = {'aarch64':'arm64','amd64':'x86_64'}.get(platform.machine().lower(),platform.machine().lower())
@@ -66,6 +73,18 @@ def main():
         run('mocapgate.py', 'process', take)
         meta = json.loads((take / 'take.json').read_text())
         assert (take / meta['bvh']).is_file()
+        scene=(take / meta['maya_scene']).read_text()
+        keys=re.findall(r'"\.ktv\[[^\]]+\]" ([^;]+)',scene)
+        assert keys and all([float(v) for v in row.split()[::2]]==list(range(1,13)) for row in keys)
+        assert 'currentUnit -l centimeter -a degree -t ntsc;' in scene
+        assert (unpacked/'assets/rigs/Man_Rig.ma').stat().st_size>1000
+        character = take / meta['character_scene']
+        assert 'createNode skinCluster' in character.read_text()
+        motion = json.loads((take / meta['character_motion']).read_text())
+        assert motion['frames']==12 and motion['fps']==30
+        assert (take / motion['motion_file']).stat().st_size==12*motion['stride']*4
+        assert (unpacked/'apps/studio/ui/rigs/man-rig.json').is_file()
+        print('Native Maya export: integer keys, 30 FPS and bundled rig OK')
         run('mocapgate.py', tmp / 'missing.json', '-o', tmp / 'missing.bvh', success=False)
         assert not (tmp / 'missing.bvh').exists()
         run('-c', """import sys,time; sys.path.insert(0,'apps/studio'); import server
@@ -90,7 +109,11 @@ finally:
             print('Blender unavailable: FBX test skipped (release still requires target export testing)')
         # Test copies run against the unpacked libraries, not the original implementations.
         shutil.copytree(ROOT / 'tests', unpacked / 'tests', dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__'))
-        suite_env = {**env, 'PATH':os.environ.get('PATH','')}
+        suite_env = {**env, 'PATH':os.environ.get('PATH',''), 'PYTHONUTF8':'1'}
+        if args.blender:
+            blender_path = args.blender.resolve()
+            suite_env['MOCAPGATE_BLENDER'] = str(blender_path)
+            suite_env['PATH'] = str(blender_path.parent) + os.pathsep + suite_env['PATH']
         subprocess.run([py, '-B', '-m', 'unittest', 'discover', 'tests'], cwd=unpacked, env=suite_env, check=True, timeout=180)
         print('Native archive: startup without system Python, processing, errors, cancellation and unit suite OK')
     return 0

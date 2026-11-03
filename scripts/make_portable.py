@@ -17,12 +17,12 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-INCLUDE = ["mocapgate.py", "LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "README.en.md", "requirements.txt", "core", "apps/studio/server.py",
-           "apps/studio/ui", "apps/studio/README.md", "colab", "docs", "targets", "tools", "scripts/vendor_web.py",
+INCLUDE = ["mocapgate.py", "LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "README.md", "README.en.md", "requirements.txt", "core", "apps/studio/server.py",
+           "apps/studio/ui", "apps/studio/README.md", "colab", "docs", "assets/rigs", "targets", "tools", "scripts/vendor_web.py", "scripts/setup_gvhmr.py", "scripts/setup_gemx.py",
            "scripts/setup_windows.ps1", "scripts/start_windows.cmd", "scripts/configure_surface.py",
            "scripts/setup_macos.sh", "scripts/start_macos.command", "scripts/install_ffmpeg.py",
-           "scripts/install_example.py", "scripts/prepare_models.py", "examples/sports2d", "tests/fixtures/sports2d/two_people.mp4",
-           "tests/fixtures/sports2d/expected.json", "tests/fixtures/sports2d/LICENSE", "tests/fixtures/sports2d/README.md"]
+           "scripts/build_rig_asset.py", "scripts/install_example.py", "scripts/prepare_models.py", "examples/sports2d", "tests/fixtures/sports2d/two_people.mp4",
+           "tests/fixtures/sports2d/expected.json", "tests/fixtures/sports2d/LICENSE", "tests/fixtures/sports2d/README.md", "assets/models/mediapipe"]
 SKIP = re.compile(r"(^\._|__pycache__|\.pyc$|\.DS_Store$)")
 START = """MoCapGate Studio — переносная версия · portable
 
@@ -31,7 +31,7 @@ START = """MoCapGate Studio — переносная версия · portable
     python3 mocapgate.py doctor     # что найдено и чего не хватает
     python3 mocapgate.py studio     # открывает Studio в браузере (работает только на этом компьютере)
 
-Распознавание позы на компьютере: Studio → «Статус и ИИ» → MediaPipe → Установить (нужен uv).
+Распознавание позы на компьютере: Studio → «Модели и инструменты» → MediaPipe → Установить (нужен uv).
 Лучшее качество — GVHMR в Colab: Studio → «Новый дубль» → GVHMR · Colab.
 Дубли сохраняются в ~/Documents/MoCapGate Takes.
 

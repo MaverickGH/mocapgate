@@ -1,3 +1,5 @@
+> **Исторический документ (0.3.1).** Текущие версии — стабильная 0.3.2 и 0.3.3 beta, см. [README](../../README.md).
+
 **MoCapGate Studio 0.3.1 — мокап из видео в Blender, Maya и движки**
 
 - **macOS · Apple Silicon** — `MoCapGate.Studio_0.3.1_aarch64.dmg`: перетащить в «Программы», первый запуск — правый клик → «Открыть». Или быстрый старт `MoCapGate-0.3.1-macos-arm64-quickstart.zip` (приложение + Python + MediaPipe в один клик).

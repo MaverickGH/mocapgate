@@ -6,7 +6,7 @@ Eight implementations are replaced by Cython loaders in the packages and
 public snapshot. Originals and previous history remain in a private source
 repository and verified backups.
 
-MoCapGate remains **MIT**. Compilation makes implementations harder to inspect;
+Current MoCapGate code uses **Apache-2.0**; earlier MIT permissions remain. Compilation makes implementations harder to inspect;
 it does not prevent cloning, reverse engineering or licence-permitted reuse.
 Activation and proprietary licensing are separate decisions.
 [Detailed Russian guide](code-protection.ru.md).
@@ -83,4 +83,4 @@ portable ZIPs and installers already contain their interpreter.
 The owner authorized the public history rewrite. A new root commit replaces
 public branches using `--force-with-lease`; older tags carry archival descriptions
 while old release assets remain available. Old Git objects and external copies
-may remain accessible, and MIT permissions are preserved.
+may remain accessible, and licence permissions are preserved.

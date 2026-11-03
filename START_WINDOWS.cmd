@@ -1,4 +1,5 @@
-@echo off
-cd /d "%~dp0"
-set PYTHONDONTWRITEBYTECODE=1
-py -3.12 mocapgate.py studio %*
+@echo off
+cd /d "%~dp0"
+set "PATH=%CD%;%PATH%"
+set PYTHONDONTWRITEBYTECODE=1
+"%~dp0python\python.exe" "%~dp0mocapgate.py" studio %*

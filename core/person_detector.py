@@ -4,6 +4,7 @@ MediaPipe's pose detector can report duplicate poses of one person. An independe
 object detector supplies one crop per person; pose inference runs separately.
 """
 import math
+from pathlib import Path
 
 
 def suppress(boxes, threshold=.4):
@@ -29,7 +30,7 @@ class PersonDetector:
         from mediapipe.tasks.python import vision
         self.mp = mp
         self.detector = vision.ObjectDetector.create_from_options(vision.ObjectDetectorOptions(
-            base_options=mpt.BaseOptions(model_asset_path=model), category_allowlist=['person'],
+            base_options=mpt.BaseOptions(model_asset_buffer=Path(model).read_bytes()), category_allowlist=['person'],
             score_threshold=.25, max_results=16))
 
     def detect(self, rgb, maximum):

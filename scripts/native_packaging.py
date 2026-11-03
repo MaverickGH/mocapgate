@@ -80,8 +80,14 @@ def runtime_licences(destination: Path, work: Path) -> None:
               'win32': 'x86_64-pc-windows-msvc',
               'linux': ('aarch64' if machine() == 'arm64' else 'x86_64') + '-unknown-linux-gnu'}[sys.platform]
     prefix = f"cpython-{CONFIG['python']}+{release}-{target}-"
+    headers = {'User-Agent':'MoCapGate-native-packaging'}
+    # CI supplies a temporary read-only token for this public metadata request.
+    # It is never saved in the distribution or sent to the binary download host.
+    token = os.environ.get('GH_TOKEN')
+    if token:
+        headers['Authorization'] = 'Bearer ' + token
     request = urllib.request.Request('https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/'+release,
-                                     headers={'User-Agent':'MoCapGate-native-packaging'})
+                                     headers=headers)
     with urllib.request.urlopen(request, timeout=60) as response:
         assets = json.load(response)['assets']
     candidates = [a for a in assets if a['name'].startswith(prefix) and a['name'].endswith('-full.tar.zst')

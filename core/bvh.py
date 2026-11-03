@@ -49,7 +49,7 @@ def write(root: Joint, frames: list[dict], frame_time: float = 1 / 30) -> str:
     out = list(lines)
     out.append("MOTION")
     out.append(f"Frames: {len(frames)}")
-    out.append(f"Frame Time: {frame_time:.7f}")
+    out.append(f"Frame Time: {frame_time:.12f}")
     for fr in frames:
         row: list[str] = []
         for joint, chan in channels:

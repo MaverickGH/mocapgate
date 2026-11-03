@@ -1,0 +1,11 @@
+* text=auto
+*.pyd -text
+*.dll -text
+*.exe -text
+*.png -text
+*.jpg -text
+*.webp -text
+*.task -text
+*.woff2 -text
+*.mp4 -text
+*.gz -text

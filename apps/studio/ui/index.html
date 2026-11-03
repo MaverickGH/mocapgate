@@ -6,6 +6,7 @@
 <title>MoCapGate Studio</title>
 <link rel="icon" href="/ui/icon.png">
 <link rel="stylesheet" href="/ui/studio.css">
+<link rel="stylesheet" href="/ui/materials.css">
 <script type="importmap">
 { "imports": { "three": "/three/build/three.module.js", "three/addons/": "/three/examples/jsm/" } }
 </script>
@@ -16,9 +17,11 @@
   <nav class="tabs" role="tablist">
     <button class="tab on" data-view="takes" data-i18n="tab_takes">Takes</button>
     <button class="tab" data-view="camera" data-i18n="tab_camera">Camera</button>
-    <button class="tab" data-view="status" data-i18n="tab_status">Status &amp; AI</button>
+    <button class="tab" data-view="status" data-i18n="tab_status">Models &amp; tools</button>
     <button class="tab" data-view="settings" data-i18n="tab_settings">Settings</button>
   </nav>
+  <button class="small update-pill hidden" id="update-pill"></button>
+  <button class="ghost small load-pill hidden" id="load-pill" data-i18n-title="load_title"></button>
   <div class="pills" id="pills"></div>
   <button class="ghost small" id="open-browser" data-i18n="open_browser" data-i18n-title="open_browser_hint">Open in browser</button>
   <button class="ghost small" id="lang" title="Language">RU</button>
@@ -26,11 +29,25 @@
 
 <!-- ======================================================== Дубли -->
 <main class="view" id="view-takes">
+
   <aside class="side">
     <button class="primary wide" id="new-take" data-i18n="new_take">+ New take</button>
+  <details class="workbench-panel queue-panel"><summary id="queue-title"></summary><p id="queue-note"></p><div class="btns"><button id="queue-resume"></button><button id="queue-pause"></button></div><div id="queue-items" role="status"></div></details>
+    <div class="take-filters">
+      <input type="search" id="take-search" data-i18n-placeholder="search_takes" placeholder="Search takes, tags…" aria-label="Search takes">
+      <select id="project-filter" aria-label="Project"></select>
+      <div class="chips" id="status-chips" role="group"></div>
+      <label class="check small-check"><input type="checkbox" id="select-mode"><span data-i18n="select_many">Select several for export</span></label>
+    </div>
+    <div class="batch-export hidden" id="batch-export">
+      <small id="batch-count"></small>
+      <div class="btns"><button class="small" data-preset="unreal">Unreal</button><button class="small" data-preset="unity">Unity</button><button class="small" data-preset="gltf">GLB</button><button class="small" data-preset="fbx">FBX</button><button class="small" data-preset="mixamo">Mixamo</button><button class="small" data-preset="blend">.blend</button></div>
+      <label class="check"><input type="checkbox" id="batch-root-motion"><span>Root motion</span></label>
+    </div>
     <div class="list" id="take-list"></div>
     <p class="empty hidden" id="no-takes" data-i18n="no_takes">No takes yet. Drop a video here or record one with the camera.</p>
     <button class="ghost small" id="reveal-library" data-i18n="reveal_library">Show library folder</button>
+    <button class="ghost small hidden" id="empty-trash"></button>
   </aside>
 
   <section class="stage" id="new-panel">
@@ -38,18 +55,18 @@
       <h1 data-i18n="new_title">New take</h1>
       <p data-i18n="new_sub">A video of a person → animation of a skeleton (BVH / FBX) for Blender, Maya and engines.</p>
     </div>
-    <label class="drop big" id="drop" tabindex="0">
-      <input type="file" id="file-input" multiple accept="video/*,.json,.pt,.npz,.zip" hidden>
+    <label class="drop big" id="drop" role="button" tabindex="0">
+      <input type="file" id="file-input" multiple accept="video/*,.json,.pt,.npz,.zip,.bvh" hidden>
       <span><b data-i18n="drop_title">Drop a video here</b><br><small data-i18n="drop_hint">mp4, mov, webm — or a result from Colab (.zip / .mocapgate.json)</small></span>
     </label>
     <div class="files" id="picked"></div>
     <label class="field"><span data-i18n="take_name">Name</span><input id="take-name" maxlength="80" placeholder="walk_01"></label>
     <fieldset class="field">
       <legend data-i18n="backend">How to recognize the motion</legend>
-      <div class="cards3" id="backend-cards">
-        <button class="card on" data-backend="mediapipe"><b>MediaPipe</b><small data-i18n="be_mediapipe">On this computer, no GPU. Body without fingers. Quick to try.</small></button>
-        <button class="card" data-backend="gvhmr-colab"><b>GVHMR · Colab</b><small data-i18n="be_colab">Best quality: whole body in the world, on Google's free GPU. A few minutes.</small></button>
-        <button class="card" data-backend="gvhmr-local"><b>GVHMR · <span data-i18n="this_pc">this PC</span></b><small data-i18n="be_local">Same quality on your NVIDIA GPU — connect GVHMR in Status.</small></button>
+      <div class="cards3" id="backend-cards"><button class="card" data-backend="gemx-local"><b>GEM-X · SOMA</b><small data-i18n="be_gemx">77 joints · body, hands and face · experimental</small></button>
+        <button class="card" data-backend="gvhmr-colab"><b>GVHMR · Colab</b><small data-i18n="be_colab">Body motion in world coordinates, using a Colab GPU.</small></button>
+        <button class="card" data-backend="gvhmr-local"><b>GVHMR · <span data-i18n="this_pc">this PC</span></b><small data-i18n="be_local">Body motion on your NVIDIA GPU. Install in Models & tools.</small></button>
+        <button class="card" data-backend="multiview-local"><b data-i18n="be_multiview_title">Calibrated multi-camera</b><small data-i18n="be_multiview">Import a session ZIP with synchronized static camera videos and measured calibration.</small></button>
       </div>
     </fieldset>
     <details class="opts" id="new-opts">
@@ -57,7 +74,7 @@
       <div class="opt-grid" id="new-opt-grid"></div>
     </details>
     <div class="actions">
-      <button class="primary" id="start" disabled data-i18n="start">Make the animation</button>
+      <label class="check"><input type="checkbox" id="batch-mode"><span id="batch-label"></span></label><button class="primary" id="start" disabled data-i18n="start">Make the animation</button>
       <span class="hint" id="start-hint"></span>
     </div>
     <div class="colab-steps hidden" id="colab-steps">
@@ -82,18 +99,35 @@
       <span class="grow"></span>
       <button class="ghost small" id="t-delete" data-i18n="delete">Delete</button>
     </div>
+    <details class="take-info" id="take-info"><summary data-i18n="take_info">Project, tags and notes</summary>
+      <div class="take-info-grid">
+        <label class="field"><span data-i18n="project">Project</span><input id="t-project" list="project-names" maxlength="60"><datalist id="project-names"></datalist></label>
+        <label class="field"><span data-i18n="tags">Tags (comma separated)</span><input id="t-tags" maxlength="400"></label>
+        <label class="field span2"><span data-i18n="notes">Notes</span><textarea id="t-notes" rows="3" maxlength="4000"></textarea></label>
+      </div>
+      <button class="small" id="t-info-save" data-i18n="save">Save</button><small id="t-info-state" role="status"></small>
+    </details>
     <div class="job hidden" id="job">
       <div class="bar"><i id="job-bar"></i></div>
-      <span id="job-text"></span>
+      <span id="job-text" role="status" aria-live="polite"></span>
+      <small id="job-resources" class="mono"></small>
+      <small id="job-detail"></small>
       <button class="ghost small" id="job-cancel" data-i18n="cancel">Cancel</button>
     </div>
+    <ol class="job-steps hidden" id="job-steps" aria-label="Processing steps"></ol>
     <div class="waiting hidden" id="t-waiting">
       <p data-i18n="waiting_colab">Waiting for the result from Colab. Run the notebook with this video, then drop the *_mocapgate.zip here.</p>
-      <label class="drop" id="attach-drop" tabindex="0"><input type="file" id="attach-input" multiple accept=".zip,.json,.pt,.npz,video/*" hidden>
+      <label class="drop" id="attach-drop" role="button" tabindex="0"><input type="file" id="attach-input" multiple accept=".zip,.json,.pt,.npz,video/*" hidden>
         <span data-i18n="attach_hint">Drop the Colab result (.zip or .mocapgate.json + .mp4)</span></label>
-      <div class="btns"><button class="small" id="open-colab-2" data-i18n="open_colab">Open in Colab</button></div>
+      <div class="btns"><button class="small" id="open-colab-2" data-i18n="open_colab">Open in Colab</button><a class="button small ghost" id="dl-notebook-2" data-i18n="download_notebook">Download notebook (.ipynb)</a>
+        <button class="small ghost" id="wait-reveal" data-i18n="wait_reveal">Show the video file</button></div>
+      <div class="btns"><select id="wait-backend" aria-label="Model"><option value="gemx-local">GEM-X</option><option value="gvhmr-local">GVHMR · PC</option></select>
+        <button class="small" id="wait-local" data-i18n="wait_local">Process on this PC instead</button></div>
     </div>
     <div class="error hidden" id="t-error"></div>
+    <div class="advice hidden" id="t-advice" role="status"></div>
+    <div class="btns hidden" id="t-error-actions"><button class="small" id="t-open-models" data-i18n="open_models">Open Models &amp; tools</button></div>
+    <div class="waiting hidden" id="t-queued"><p id="t-queued-text"></p><div class="btns"><button class="small primary" id="t-queue-start" data-i18n="queue_start_now">Start the queue</button></div></div>
 
     <div class="viewer" id="t-viewer">
       <div class="video-col">
@@ -101,57 +135,168 @@
           <video id="video" playsinline muted preload="auto"></video>
           <canvas id="overlay"></canvas>
           <div class="novideo hidden" id="novideo" data-i18n="no_video">No video in this take — the 3D view plays on its own.</div>
+          <div class="media-error hidden" id="media-error" role="status"></div>
         </div>
         <canvas id="strip" height="14" title=""></canvas>
         <div class="transport">
+          <button class="small" id="prev-frame" aria-label="Previous frame">‹</button>
+          <button class="small" id="next-frame" aria-label="Next frame">›</button>
           <button class="small" id="play" aria-label="play">▶</button>
           <input type="range" id="seek" min="0" max="1000" value="0" aria-label="seek">
           <span class="mono" id="time">0 / 0</span>
           <select id="speed" aria-label="speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option></select>
         </div>
+        <div class="clip-controls">
+          <label><span data-i18n="clip_in">In frame</span><input id="clip-in" type="number" min="1" value="1" step="1"></label>
+          <button class="small" id="mark-in" data-i18n="mark_in">Set In</button>
+          <label><span data-i18n="clip_out">Out frame</span><input id="clip-out" type="number" min="1" value="1" step="1"></label>
+          <button class="small" id="mark-out" data-i18n="mark_out">Set Out</button>
+          <button class="small" id="clip-loop" type="button" aria-pressed="false" aria-label="Loop range" data-i18n-title="clip_loop">↻</button>
+          <button class="small" id="clip-reset" data-i18n="clip_reset">Full take</button>
+          <button class="small" id="repair-range" data-i18n="repair_range" data-i18n-title="repair_hint">Fix these frames</button>
+          <button class="small" id="marker-add" data-i18n="marker_add" data-i18n-title="marker_hint">+ Marker</button>
+          <select id="marker-list" class="hidden" aria-label="Markers"></select>
+          <button class="small ghost hidden" id="marker-del" aria-label="Delete marker">×</button>
+        </div>
+        <small id="clip-duration" role="status"></small>
+        <div id="quality-tools" class="workbench-panel"><b id="quality-title"></b><p id="quality-note"></p><div class="btns"><button id="issue-prev">‹</button><button id="issue-next">›</button><select id="issue-list" aria-label="Problem frames"></select></div></div>
         <div class="layers">
           <label><input type="checkbox" id="show-detected" checked> <span data-i18n="layer_detected">Points found on the video</span> <i class="sw cyan"></i></label>
+          <label><input type="checkbox" id="show-hands" checked> <span data-i18n="layer_hands">Hands and fingers</span></label>
+          <label><input type="checkbox" id="show-face" checked> <span data-i18n="layer_face">Face points</span></label>
           <label><input type="checkbox" id="show-skeleton" checked> <span data-i18n="layer_skeleton">Our skeleton projected back</span> <i class="sw orange"></i></label>
         </div>
       </div>
       <div class="three-col">
-        <div class="three" id="three"></div>
+        <div class="three" id="three"><div class="model-loading hidden" id="model-loading" role="status"><i aria-hidden="true"></i><span data-i18n="creating_animation">Creating 3D animation…</span></div></div>
         <label id="surface-mode-wrap" class="hidden"><span data-i18n="o_view_mode">3D view</span>
-          <select id="surface-mode"><option value="surface" data-i18n="o_view_surface">Body</option>
+          <select id="surface-mode"><option value="character" data-i18n="o_view_character">Man_Rig character</option><option value="surface" data-i18n="o_view_surface">Body</option>
             <option value="bones" data-i18n="o_view_bones">Bones</option><option value="both" data-i18n="o_view_both">Body + bones</option></select>
         </label>
+        <label><span data-i18n="camera_view">Camera view</span><select id="camera-view">
+          <option value="free" data-i18n="camera_free">Orbit</option><option value="front" data-i18n="camera_front">Front</option><option value="back" data-i18n="camera_back">Back</option><option value="side" data-i18n="camera_side">Side</option><option value="capture" data-i18n="camera_capture" disabled>From the filming camera</option>
+        </select></label>
+        <label class="camera-follow"><input id="camera-follow" type="checkbox" checked><span data-i18n="camera_follow">Follow character</span></label>
+        <label><span data-i18n="layout">Layout</span><select id="view-layout"><option value="" data-i18n="layout_auto">Auto</option><option value="side" data-i18n="layout_side">Video and 3D side by side</option><option value="big3d" data-i18n="layout_big3d">Large 3D</option><option value="bigvideo" data-i18n="layout_bigvideo">Large video</option></select></label>
+        <label><span data-i18n="onion">Ghost poses</span><select id="onion"><option value="0" data-i18n="onion_off">Off</option><option value="1">±5</option><option value="2">±10</option><option value="3">±15</option></select></label>
         <small data-i18n="three_hint">Drag to turn, wheel to zoom. The grid is the floor, 1 m cells.</small>
+
+        <details class="workbench-panel pose-editor hidden" id="pose-editor"><summary data-i18n="pe_title">Pose editing and foot contacts</summary>
+          <small data-i18n="pe_hint">Click a joint in 3D or pick it below. Sliders rotate it at the current frame; “Set key” keeps it, the falloff blends it into neighbouring frames. Changes show immediately; “Apply” writes them into the animation (the previous version stays in history).</small>
+          <div class="pe-row"><select id="pe-joint" aria-label="Joint"></select>
+            <label><span data-i18n="pe_falloff">Falloff, frames</span><input id="pe-falloff" type="number" min="0" max="600" step="1" value="10"></label></div>
+          <div class="pe-sliders">
+            <label>X <input type="range" id="pe-x" min="-180" max="180" step="0.5" value="0"><span class="mono" id="pe-xv">0°</span></label>
+            <label>Y <input type="range" id="pe-y" min="-180" max="180" step="0.5" value="0"><span class="mono" id="pe-yv">0°</span></label>
+            <label>Z <input type="range" id="pe-z" min="-180" max="180" step="0.5" value="0"><span class="mono" id="pe-zv">0°</span></label>
+          </div>
+          <div class="btns"><button class="small" id="pe-key" data-i18n="pe_key">Set key</button><button class="small ghost" id="pe-zero" data-i18n="pe_zero">Reset sliders</button>
+            <select id="pe-keys" aria-label="Keys"></select><button class="small ghost" id="pe-key-del" aria-label="Delete key">×</button></div>
+          <canvas id="pe-curves" height="130" aria-label="Joint rotation curves"></canvas>
+          <small data-i18n="pe_curves_hint">Curves: rotation Z / X / Y of the joint over the take (click to jump). Bottom rows: foot contacts L / R (blue — automatic not shown; green — added; red — removed).</small>
+          <div class="btns"><button class="small" id="pe-contact-l" data-i18n="pe_contact_l">Left foot planted on In–Out</button><button class="small" id="pe-contact-r" data-i18n="pe_contact_r">Right foot planted on In–Out</button>
+            <button class="small ghost" id="pe-contact-free" data-i18n="pe_contact_free">Feet free on In–Out</button></div>
+          <div class="btns"><select id="pe-pin-effector" aria-label="Pin"><option value="LeftHand" data-i18n="pin_lh">Left hand</option><option value="RightHand" data-i18n="pin_rh">Right hand</option><option value="LeftFoot" data-i18n="pin_lf">Left foot</option><option value="RightFoot" data-i18n="pin_rf">Right foot</option></select>
+            <button class="small" id="pe-pin" data-i18n="pe_pin">Hold in place on In–Out (IK)</button>
+            <select id="pe-pins" aria-label="Pins"></select><button class="small ghost" id="pe-pin-del" aria-label="Delete pin">×</button></div>
+          <small data-i18n="pe_pin_hint">The hand or foot stays where it is at the In frame through In–Out (e.g. a hand on a table); arm/leg solved by IK. Visible after “Apply”.</small>
+          <div class="btns"><select id="pe-hand-candidates" aria-label="Stationary hand candidates"></select>
+            <button class="small" id="pe-hand-candidate-use" data-i18n="pe_hand_candidate_use">Review as hand pin</button></div>
+          <small id="pe-hand-candidate-status" data-i18n="pe_hand_candidate_hint" role="status">Candidates are based on low wrist speed. Review against the video; this is not confirmed object contact.</small>
+          <div class="btns"><button class="primary" id="pe-apply" data-i18n="pe_apply">Apply edits</button><button class="ghost small" id="pe-discard" data-i18n="pe_discard">Discard unsaved edits</button></div>
+          <small id="pe-state" role="status"></small>
+        </details>
         <details id="skeleton-panel" class="skeleton-panel hidden">
           <summary data-i18n="skeleton_structure">Skeleton structure</summary>
           <small data-i18n="skeleton_tip_hint">Terminal joints are fixed endpoints, not independently tracked.</small>
           <div id="skeleton-tree"></div>
         </details>
       </div>
+        <details class="workbench-panel" id="compare-panel"><summary id="compare-title"></summary><div class="three hidden" id="compare-three"></div><p id="compare-note"></p><div class="btns"><select id="compare-backend"><option value="gemx-local">GEM-X</option><option value="gvhmr-local">GVHMR</option></select><button id="compare-create"></button></div><label id="compare-select-label" for="compare-select"></label><select id="compare-select"></select><label class="hidden" id="compare-person-wrap"><span id="compare-person-label"></span><select id="compare-person"></select></label><small id="compare-state" role="status"></small></details>
     </div>
 
     <div class="below">
       <section class="report" id="report">
-        <h3 data-i18n="check_title">How well the video was caught</h3>
+        <h3 data-i18n="check_title">Video and model checks</h3>
         <div class="score-row"><div class="score" id="score">–</div><p id="verdict"></p></div>
         <ul class="items" id="items"></ul>
+        <section class="output-motion hidden" id="output-motion"><h4 data-i18n="output_motion_title">Final animation (BVH)</h4><ul class="items" id="output-motion-items"></ul></section>
       </section>
       <section class="redo">
         <h3 data-i18n="tune_title">Tune and process again</h3>
         <div class="opt-grid" id="take-opt-grid"></div>
+        <small id="options-changed" class="changed hidden" role="status" data-i18n="options_changed">Settings changed — process again to apply them.</small>
         <button id="reprocess" data-i18n="reprocess">Process again</button>
+        <div class="btns dup-row"><select id="dup-backend" aria-label="Model for the new take"><option value="gemx-local">GEM-X</option><option value="gvhmr-local">GVHMR · PC</option><option value="gvhmr-colab">GVHMR · Colab</option></select>
+          <button class="small ghost" id="dup-run" data-i18n="dup_run">Process as a new take</button></div>
+        <div id="export-block">
         <h3 data-i18n="export_title">Export</h3>
+        <small id="export-summary" role="status"></small>
         <small id="export-person-hint" class="hidden"></small>
         <div class="btns col">
             <a class="button hidden" id="dl-capture" data-i18n="o_details">Hands / face data (JSON)</a>
-          <a class="button primary" id="dl-bvh" data-i18n="dl_bvh">Download BVH</a>
+            <a class="button hidden" id="dl-face" data-i18n="o_face_curves">Facial expressions (52 curves, CSV)</a>
+            <a class="button hidden" id="dl-audio" data-i18n="dl_audio">Sound from the video (WAV)</a>
+          <a class="button" id="dl-ma" data-i18n="dl_ma">Maya scene (.ma)</a><a class="button hidden" id="dl-maya-tools" data-i18n="dl_maya_tools">Maya finishing tools (.py)</a><a class="button primary" id="dl-bvh" data-i18n="dl_bvh">Download BVH</a>
           <button id="make-fbx" data-i18n="make_fbx">Make FBX (Maya, Unity, Unreal)</button>
           <a class="button hidden" id="dl-fbx" data-i18n="dl_fbx">Download FBX</a>
           <button id="open-blender" data-i18n="open_blender">Open in Blender</button>
           <button class="hidden" id="open-maya" data-i18n="open_maya">Open FBX in Maya</button>
           <button class="ghost" id="reveal" data-i18n="reveal">Show in folder</button>
         </div>
+        <div id="maya-workflow" class="hidden">
+          <h4 data-i18n="maya_steps_title">Finish in Maya</h4>
+          <ol>
+            <li data-i18n="maya_step_scene">Download the Maya scene (.ma) and open it in Maya. The character and export FPS are already prepared.</li>
+            <li data-i18n="maya_step_tools">Optional: download Maya finishing tools (.py), open in Script Editor → Python and run.</li>
+            <li data-i18n="maya_step_layer">Click Create additive correction layer. Keep MoCapGate_Corrections selected when keying; save edits with Save As.</li>
+          </ol>
+          <small data-i18n="maya_steps_limit">These tools edit joints; IK/FK controllers are not included. FBX contains the capture skeleton; the full character is in .ma.</small>
+        </div>
+        <div class="engine-export">
+          <h4 data-i18n="engines_title">For game engines</h4>
+          <div class="btns">
+            <button class="small" id="eng-unreal">Unreal · FBX</button><button class="small" id="eng-unity">Unity · FBX</button>
+            <button class="small" id="eng-gltf">glTF · GLB</button><button class="small" id="eng-mixamo">Mixamo · FBX</button>
+            <button class="small" id="eng-cascadeur">Cascadeur · FBX</button><button class="small" id="eng-blend">Blender · .blend</button>
+            <button class="small hidden" id="eng-livelink">Live Link Face · CSV</button>
+          </div>
+          <label class="check"><input type="checkbox" id="eng-root-motion"><span data-i18n="eng_root_motion">Root motion (separate root bone carries travel)</span></label>
+          <label class="check hidden" id="eng-all-wrap"><input type="checkbox" id="eng-all"><span data-i18n="eng_all">All participants in one file</span></label>
+          <div class="btns col" id="engine-files"></div>
+          <h4 data-i18n="char_title">Your character</h4>
+          <small data-i18n="char_hint">Upload your rigged character (.fbx, .glb, .blend): bones are matched automatically (Mixamo, UE, Unity, Rigify, CC, Daz, VRoid) and the motion is baked onto it. Facial curves go to matching ARKit shape keys.</small>
+          <div class="btns">
+            <select id="char-select" aria-label="Character"></select>
+            <label class="button small"><span data-i18n="char_upload">Upload character</span><input type="file" id="char-upload" accept=".fbx,.glb,.gltf,.blend" hidden></label>
+            <button class="small primary" id="char-run" data-i18n="char_run">Transfer animation</button>
+          </div>
+          <div class="btns col" id="char-files"></div>
+        </div>
+        <div class="clip-export">
+          <label><input type="checkbox" id="clip-inplace"><span data-i18n="clip_inplace">Clip: in place (keep jumps)</span></label>
+          <label><input type="checkbox" id="clip-fbx"><span data-i18n="clip_fbx">Include FBX (Blender)</span></label>
+          <label><input type="checkbox" id="clip-make-loop"><span data-i18n="clip_make_loop">Seamless loop</span></label>
+          <label><input type="checkbox" id="clip-root-motion"><span data-i18n="clip_root_motion">Root bone (root motion)</span></label>
+          <details class="clip-edit"><summary data-i18n="clip_edit">Edit the clip: mirror, speed, ease, turn</summary>
+            <div class="clip-edit-grid">
+              <label class="check"><input type="checkbox" id="ce-mirror"><span data-i18n="ce_mirror">Mirror (left ↔ right)</span></label>
+              <label class="check"><input type="checkbox" id="ce-floor"><span data-i18n="ce_floor">Put feet on the floor</span></label>
+              <label class="field"><span data-i18n="ce_speed">Speed ×</span><input id="ce-speed" type="number" min="0.1" max="10" step="0.05" value="1"></label>
+              <label class="field"><span data-i18n="ce_yaw">Turn around vertical, °</span><input id="ce-yaw" type="number" min="-360" max="360" step="5" value="0"></label>
+              <label class="field"><span data-i18n="ce_scale">Path scale (bones unchanged)</span><input id="ce-scale" type="number" min="0.01" max="100" step="0.05" value="1"></label>
+              <label class="field"><span data-i18n="ce_ease_in">Ease in, s</span><input id="ce-ease-in" type="number" min="0" max="10" step="0.05" value="0"></label>
+              <label class="field"><span data-i18n="ce_ease_out">Ease out, s</span><input id="ce-ease-out" type="number" min="0" max="10" step="0.05" value="0"></label>
+            </div>
+          </details>
+          <button id="export-clip" data-i18n="export_clip">Export selected range</button>
+          <select id="clip-history" aria-label="Exported clips" class="hidden"></select>
+          <a class="button hidden" id="dl-clip" data-i18n="dl_clip">Download clip archive</a>
+        </div>
+        <details id="version-history" class="hidden"><summary data-i18n="version_history">Previous animation versions</summary><div id="version-files"></div></details>
         <small data-i18n="export_hint">Blender: File → Import → Motion Capture (.bvh), Scale 0.01. Maya: import the FBX, then HumanIK to retarget.</small>
-          <small id="capture-summary"></small>
+        <small id="capture-summary"></small>
+        </div>
       </section>
     </div>
   </section>
@@ -180,7 +325,11 @@
         <label class="field"><span>FPS</span><select id="cam-fps"><option>24</option><option selected>30</option><option>60</option></select></label>
       </div>
       <label class="field"><span data-i18n="cam_countdown">Countdown, s</span><select id="cam-cd"><option>0</option><option selected>3</option><option>5</option><option>10</option></select></label>
-      <label class="check"><input type="checkbox" id="live-check" checked> <span data-i18n="live_check">Live check: skeleton and hints</span></label>
+      <label class="check"><input type="checkbox" id="cam-show-body" checked> <span data-i18n="layer_detected">Body points</span></label>
+      <label class="check"><input type="checkbox" id="cam-show-hands"> <span data-i18n="layer_hands">Hands and fingers</span></label>
+      <label class="check"><input type="checkbox" id="cam-show-face"> <span data-i18n="layer_face">Face points</span></label>
+      <small id="live-detail-status" role="status"></small>
+      <label class="check"><input type="checkbox" id="live-check"> <span data-i18n="live_check">Live check: skeleton and hints</span></label>
       <ul class="hints" id="live-hints"></ul>
       <div class="btns col">
         <button class="primary rec-btn" id="rec" disabled data-i18n="rec_start">● Record</button>
@@ -188,11 +337,12 @@
       </div>
       <div class="hidden" id="rec-done">
         <label class="field"><span data-i18n="take_name">Name</span><input id="rec-name" maxlength="80"></label>
+        <label class="field"><span data-i18n="rec_model">Recognize with</span><select id="rec-backend"></select></label>
         <div class="btns col">
           <button class="primary" id="rec-use" data-i18n="rec_use">Make a take from it</button>
           <button class="ghost" id="rec-again" data-i18n="rec_again">Record again</button>
         </div>
-        <small data-i18n="rec_backend_hint">The take uses the recognition chosen in Settings; you can change it on the take.</small>
+        <small data-i18n="rec_backend_hint">Colab: the take waits for the notebook result. GEM-X and GVHMR on this PC process right away.</small>
       </div>
       <details class="tips"><summary data-i18n="tips_title">How to film for good mocap</summary>
         <ul><li data-i18n="tip_1">The whole body in frame, head to feet, with a little room around.</li>
@@ -209,13 +359,50 @@
 <main class="view hidden" id="view-status">
   <section class="stage wide-stage">
     <div class="panel-heading">
-      <h1 data-i18n="status_title">Status &amp; AI</h1>
+      <h1 data-i18n="status_title">Models &amp; tools</h1>
       <p data-i18n="status_sub">What is found on this computer, what is missing and how to add it.</p>
       <button class="ghost small" id="refresh" data-i18n="refresh">Check again</button>
     </div>
+    <section class="setup-wizard workbench-panel" id="setup-wizard">
+      <h2 data-i18n="wiz_title">Installation, step by step</h2>
+      <div class="setup-console" id="setup-console">
+        <div class="job hidden" id="setup-job"><div class="bar"><i id="setup-bar"></i></div><span id="setup-text" role="status" aria-live="polite"></span>
+          <small id="setup-detail" class="mono"></small><small id="setup-resources" class="mono"></small><button class="small ghost" data-i18n="cancel">Cancel</button></div>
+        <ol class="job-steps hidden" id="setup-steps" aria-label="Steps"></ol>
+        <pre class="log hidden" id="setup-log" aria-label="Log"></pre>
+        <div class="advice hidden" id="setup-advice" role="status"></div>
+      </div>
+      <ol class="wiz-steps">
+        <li><b data-i18n="wiz_check">Check the computer</b>
+          <small data-i18n="wiz_check_hint">Windows/macOS version, memory, disk, NVIDIA driver, WSL, internet access to the download servers. Problems come with a fix.</small>
+          <div class="btns"><button class="small" id="pf-run" data-i18n="wiz_check_run">Check the computer</button></div>
+          <div id="pf-results" role="status"></div></li>
+        <li><b data-i18n="wiz_install">Install everything recommended</b>
+          <small id="install-plan"></small>
+          <label class="check hidden" id="install-terms-wrap"><input type="checkbox" id="install-terms"><span data-i18n="wiz_terms">I accept the GVHMR and model terms (non-commercial use)</span></label>
+          <div class="btns"><button class="primary" id="install-all" data-i18n="wiz_install_run">Install everything recommended</button></div>
+          <small data-i18n="wiz_install_hint">Steps that are already installed are skipped. If the internet drops, press the button again — downloads resume.</small></li>
+        <li><b data-i18n="bench_title">Performance test</b>
+          <small data-i18n="bench_hint">Runs GEM-X on the short demo video and measures speed, peak video memory and RAM (inside WSL — the VM memory). Then suggests settings for this computer. Takes 2–10 minutes.</small>
+          <div class="btns"><select id="bench-quality" aria-label="Mode"><option value="fast" data-i18n="o_gemx_q_fast">Fast</option><option value="accurate" data-i18n="o_gemx_q_accurate">Accurate</option><option value="max" data-i18n="o_gemx_q_max">Maximum</option></select>
+            <button class="small" id="bench-run" data-i18n="bench_run">Run the test</button><button class="small ghost hidden" id="bench-apply" data-i18n="bench_apply">Use for new takes</button></div>
+          <div id="bench-result" role="status"></div></li>
+        <li><b data-i18n="wiz_try">Try it</b>
+          <div class="btns"><button class="small" id="open-demo" data-i18n="wiz_demo">Open the demo take</button><button class="small ghost" id="support-report" data-i18n="wiz_report">Support report</button></div>
+          <small data-i18n="wiz_report_hint">The report (system check, versions, install logs; no videos or animations) is saved to Downloads — you decide whom to send it to.</small></li>
+      </ol>
+    </section>
+    <section class="setup-intro">
+      <div><span class="setup-eyebrow" data-i18n="setup_eyebrow">FIRST LAUNCH</span>
+      <h2 data-i18n="setup_title">Processing models and export tools</h2>
+      <p data-i18n="setup_description">Install video and export tools. Choose a processing model below.</p></div>
+      <button class="primary" id="setup-recommended" data-i18n="setup_recommended">Install export tools</button>
+      <p class="hint" id="setup-readiness" role="status"></p>
+    </section>
+    <section class="workbench-panel"><button id="diagnose"></button><div id="diagnosis" role="status"></div></section>
     <div class="grid-cards" id="status-cards"></div>
-    <div class="job hidden" id="setup-job"><div class="bar"><i id="setup-bar"></i></div><span id="setup-text"></span></div>
-    <pre class="log hidden" id="setup-log"></pre>
+
+    <button class="ghost small hidden" id="status-open-settings" data-i18n="setup_open">Preferences</button>
   </section>
 </main>
 
@@ -224,20 +411,30 @@
   <section class="stage wide-stage">
     <div class="panel-heading"><h1 data-i18n="settings_title">Settings</h1>
       <p id="settings-file"></p></div>
+
+    <details class="workbench-panel"><summary id="profile-title"></summary><p id="profile-note"></p><label id="profile-select-label" for="profile-select"></label><select id="profile-select"></select><button id="profile-use"></button><div class="settings-grid"><label><span data-i18n="profile_name">Name</span><input id="profile-name" maxlength="80"></label><label>Maya .ma<input id="profile-rig"><input id="profile-upload" type="file" accept=".ma"><small id="profile-upload-note"></small></label><label><span data-i18n="profile_scale">Trajectory scale</span><input id="profile-scale" type="number" min="0.01" max="100" step="0.01" value="1"></label><label><span data-i18n="profile_yaw">Yaw (Y rotation), °</span><input id="profile-yaw" type="number" min="-180" max="180" value="0"></label></div><button id="profile-auto"></button><p id="profile-auto-note"></p><label><span data-i18n="profile_map">JSON: source → character joint</span><textarea id="profile-map" rows="8" spellcheck="false" placeholder='{"Hips":"pelvis", "LeftUpLeg":"thigh_L"}'></textarea></label><button id="profile-save"></button><small id="profile-state" role="status"></small></details>
+    <details class="manual-settings" open><summary data-i18n="setup_preferences">Preferences and advanced paths</summary>
     <div class="settings-grid">
       <label class="field"><span data-i18n="set_lang">Language</span>
         <select id="s-lang"><option value="" data-i18n="lang_auto">As the system</option><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <label class="check"><input type="checkbox" id="s-updates"><span data-i18n="set_updates">Check for new versions (anonymous request to GitHub)</span></label>
       <label class="field"><span data-i18n="set_library">Takes folder</span><input id="s-library" placeholder="~/Documents/MoCapGate Takes"></label>
       <label class="field"><span data-i18n="set_backend">Recognition by default</span>
-        <select id="s-backend"><option value="mediapipe">MediaPipe</option><option value="gvhmr-colab">GVHMR · Colab</option><option value="gvhmr-local">GVHMR · local</option></select></label>
-      <div class="opt-grid span2" id="settings-opt-grid"></div>
-      <label class="field"><span data-i18n="set_smplx">SMPL-X model (exact bone lengths for GVHMR)</span><input id="s-smplx" placeholder="…/SMPLX_NEUTRAL.npz"></label>
+        <select id="s-backend"><option value="gemx-local">GEM-X · SOMA</option><option value="gvhmr-colab">GVHMR · Colab</option><option value="gvhmr-local" data-i18n="gvhmr_this_pc">GVHMR · this PC</option></select></label>
+      <div class="opt-grid span2" id="settings-opt-grid"></div><label class="field"><span data-i18n="rig_label">Maya character</span><select id="s-rig"><option value="builtin">Man Rig</option><option value="" data-i18n="rig_capture">Capture skeleton</option><option value="custom" data-i18n="rig_custom">Custom Maya rig</option></select></label><label class="field" id="rig-path-field"><span data-i18n="rig_path">Custom rig (.ma)</span><input id="s-rig-path" placeholder="/path/to/character.ma"></label>
+      <label class="field"><span data-i18n="set_gemx_dir">GEM-X — repository</span><input id="s-gemx-dir"></label><label class="field"><span>GEM-X — Python</span><input id="s-gemx-python"></label><label class="field"><span>GEM-X — WSL (Windows)</span><input id="s-gemx-wsl"></label><label class="field"><span data-i18n="set_smplx">SMPL-X model (exact bone lengths for GVHMR)</span><input id="s-smplx" placeholder="…/SMPLX_NEUTRAL.npz"></label>
       <label class="field"><span data-i18n="set_blender">Blender (if not found by itself)</span><input id="s-blender" placeholder="/Applications/Blender.app/Contents/MacOS/Blender"></label>
       <label class="field"><span data-i18n="set_maya">Maya (optional)</span><input id="s-maya"></label>
-      <label class="field"><span data-i18n="set_gvhmr_dir">GVHMR folder (NVIDIA GPU)</span><input id="s-gvhmr-dir" placeholder="~/GVHMR"></label>
-      <label class="field"><span data-i18n="set_gvhmr_py">Python of the GVHMR environment</span><input id="s-gvhmr-py" placeholder="~/miniconda3/envs/gvhmr/bin/python"></label>
+      <details class="span2"><summary data-i18n="set_gvhmr_advanced">Advanced GVHMR paths</summary>
+      <p data-i18n="set_gvhmr_tip">Install GVHMR in Models &amp; tools. These fields are optional.</p>
+      <label class="field"><span data-i18n="set_gvhmr_runtime">Runtime</span><select id="s-gvhmr-runtime"><option value="native">Python</option><option value="wsl">WSL</option></select></label>
+      <label class="field" id="wsl-distro-field"><span data-i18n="set_wsl_distro">WSL distribution (blank: automatic)</span><input id="s-wsl-distro" placeholder="Ubuntu" autocomplete="off"></label>
+      <label class="field"><span data-i18n="set_gvhmr_dir">GVHMR folder (NVIDIA GPU)</span><input id="s-gvhmr-dir"></label>
+      <label class="field"><span data-i18n="set_gvhmr_py">Python of the GVHMR environment</span><input id="s-gvhmr-py"></label>
+      </details>
     </div>
     <div class="actions"><button class="primary" id="s-save" data-i18n="save">Save</button><span class="hint" id="s-saved"></span></div>
+    </details>
   </section>
 </main>
 

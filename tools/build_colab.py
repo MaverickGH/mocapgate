@@ -35,7 +35,7 @@ def code(text: str, title: str | None = None, hidden: bool = False) -> dict:
 
 
 INTRO = """
-# MoCapGate × GVHMR — мокап из видео на GPU Colab
+# MoCapGate × GVHMR — мокап из видео на GPU Colab · motion capture from video on a Colab GPU
 
 **Видео → движение всего тела в мировых координатах (GVHMR, SIGGRAPH Asia 2024) → BVH для Blender / Maya
 и файл дубля для MoCapGate Studio.** *Video → GVHMR world-grounded motion → BVH + a MoCapGate take.*
@@ -45,16 +45,29 @@ INTRO = """
 2. Запустите ячейки по порядку (▶ слева или *Среда выполнения → Выполнить всё*). Первая установка — 6–10 минут,
    дальше в той же сессии — секунды.
 3. На шаге 3 загрузите **SMPLX_NEUTRAL.npz** — бесплатная регистрация на
-   [smpl-x.is.tue.mpg.de](https://smpl-x.is.tue.mpg.de) → *Download* → *SMPL-X v1.1 (NPZ)*. Один раз положите файл
-   в Google Drive в папку `MoCapGate/` — дальше ноутбук найдёт его сам.
+   [smpl-x.is.tue.mpg.de](https://smpl-x.is.tue.mpg.de) → *Download* → *SMPL-X v1.1 (NPZ)*. Можно один раз положить файл
+   в Google Drive в папку `MoCapGate/` — тогда ноутбук найдёт его сам.
 4. На шаге 4 загрузите видео (или возьмите пример). Результат — архив с `*.bvh` и `*.mocapgate.json`:
-   BVH сразу в Blender (*Import → Motion Capture*, Scale 0.01), JSON — в MoCapGate Studio для проверки и экспорта.
+   BVH сразу в Blender (*Import → Motion Capture*, Scale 0.01), архив — в MoCapGate Studio для проверки и экспорта.
+
+How to use (English):
+1. **Runtime → Change runtime type → GPU (T4 is enough)**.
+2. Run the cells in order (▶ on the left, or *Runtime → Run all*). The first installation takes 6–10 minutes;
+   later runs in the same session take seconds.
+3. At step 3 upload **SMPLX_NEUTRAL.npz** — free sign-up at [smpl-x.is.tue.mpg.de](https://smpl-x.is.tue.mpg.de)
+   → *Download* → *SMPL-X v1.1 (NPZ)*. You can place it once in Google Drive under `MoCapGate/` so the notebook finds it.
+4. At step 4 upload the video (or use the sample). The result is an archive with `*.bvh` and `*.mocapgate.json`:
+   import the BVH in Blender (*Import → Motion Capture*, Scale 0.01) or drop the archive into MoCapGate Studio.
 
 Советы по съёмке: человек целиком в кадре, камера на уровне пояса, хороший свет, без сильного размытия.
 Если камера стоит на месте — включите `static_camera`: так точнее.
+*Filming tips: the whole person in frame, camera at waist height, good light; enable `static_camera` for a tripod shot.*
 
-> Лицензии: GVHMR и модель SMPL-X — **только для некоммерческого использования**. Видео обрабатывается в вашей
-> сессии Colab и никуда больше не уходит.
+> Лицензии: GVHMR и модель SMPL-X — **только для некоммерческого использования**. Видео и SMPL-X загружаются
+> в вашу сессию Google Colab (и в Google Drive, если вы используете Drive); MoCapGate их никуда больше не отправляет.
+>
+> Licences: GVHMR and the SMPL-X model are **non-commercial only**. The video and SMPL-X are uploaded to your
+> Google Colab session (and to Google Drive if you use Drive); MoCapGate sends them nowhere else.
 """
 
 SETTINGS = """
@@ -246,8 +259,12 @@ def build() -> dict:
         code(f"RUNNER_CODE = {RUNNER_CODE()!r}\n" + RUN, "Шаг 5. GVHMR: поза и траектория"),
         code(EXPORT, "Шаг 6. BVH + дубль MoCapGate → скачать"),
         code(PREVIEW, "Шаг 7. Быстрый просмотр скелета"),
-        md("Дальше: перетащите архив (или `.mocapgate.json` вместе с `.mp4`) в **MoCapGate Studio** — там проверка "
-           "поверх видео, 3D-просмотр, сглаживание и экспорт в FBX для Maya и движков."),
+        md("Дальше: перетащите архив (или `.mocapgate.json` вместе с `.mp4`) в ожидающий дубль **MoCapGate Studio** — "
+           "там проверка поверх видео, 3D-просмотр, сглаживание и экспорт (BVH, FBX, Maya, движки). Кисти и мимику "
+           "Colab не считает: включите их в настройках дубля в Studio и нажмите «Обработать заново».\n\n"
+           "*Next: drop the archive (or `.mocapgate.json` with the `.mp4`) into the waiting take in **MoCapGate Studio** "
+           "for overlay review, 3D preview, smoothing and export (BVH, FBX, Maya, engines). Colab does not compute hands "
+           "or facial expressions: enable them in the take options in Studio and click Process again.*"),
     ]
     return {"nbformat": 4, "nbformat_minor": 5, "cells": cells,
             "metadata": {"accelerator": "GPU", "colab": {"provenance": [], "gpuType": "T4", "name": "MoCapGate_GVHMR"},

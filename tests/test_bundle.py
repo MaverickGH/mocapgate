@@ -21,6 +21,8 @@ for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 NEED = ["mocapgate.py", "LICENSE", "core/pipeline.py", "core/pose_worker.py", "core/person_tracking.py", "core/person_detector.py", "core/blender_io.py", "core/gvhmr_runner.py",
+        "core/blender_export.py", "core/engine_export.py", "core/blender_retarget.py", "core/bone_map.py", "core/leg_ik.py", "core/studio_tools.py",
+        "core/clip_export.py", "core/anim_tools.py", "core/motion_cleanup.py", "core/livelink.py", "core/face_export.py", "core/install_util.py",
         "apps/studio/server.py", "apps/studio/ui/index.html", "apps/studio/ui/studio.js", "apps/studio/ui/viewer3d.js",
         "apps/studio/ui/vendor/three/build/three.module.js", "apps/studio/ui/vendor/three/examples/jsm/loaders/BVHLoader.js",
         "apps/studio/ui/vendor/tasks-vision/vision_bundle.mjs", "apps/studio/ui/vendor/tasks-vision/wasm/vision_wasm_internal.wasm",

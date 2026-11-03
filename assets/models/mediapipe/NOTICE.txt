@@ -1,0 +1,3 @@
+MediaPipe model bundles by Google. Unmodified official model bundles, licensed under Apache License 2.0.
+Model authors include Valentin Bazarevsky, Ivan Grishchenko, Eduard Gabriel Bazavan, Geng Yan, Andrei Zanfir and other Google contributors. See the official model cards linked in manifest.json for authorship and model limitations.
+No SMPL-X, MetaHuman/Fab, GVHMR or SAM gated model is included in this directory.

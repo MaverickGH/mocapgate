@@ -2,8 +2,9 @@
 
 ## Licence and authorship
 
-Read LICENSE and THIRD_PARTY_NOTICES.md. MoCapGate currently remains MIT; native
-packaging does not revoke permissions for existing or new MIT-covered versions.
+Read LICENSE and THIRD_PARTY_NOTICES.md. Current MoCapGate code uses Apache-2.0 as of 2026-10-07. Read NOTICE and
+docs/licenses/MoCapGate-MIT-legacy.txt; earlier MIT permissions remain valid.
+Native packaging does not revoke licence permissions.
 Preserve CYBER Department attribution and third-party notices. GVHMR, SMPL-X and
 sample footage retain their own terms. Do not copy MeshGate's proprietary code
 or licence restrictions into this repository; MoCapGate has its own licence.
@@ -33,7 +34,7 @@ tag deletion and release replacement require explicit user authorisation.
 ## Honest claims
 
 Native compilation makes packaged code harder to inspect; it does not prevent
-cloning, reverse engineering, patching or MIT-permitted reuse. AGENTS.md is a
+cloning, reverse engineering, patching or licence-permitted reuse. AGENTS.md is a
 transparent maintenance instruction, not access control. Do not add hidden
 commands, destructive traps, network callbacks or misleading prompt injections.
 Activation and a proprietary licence are separate product decisions. Never put
