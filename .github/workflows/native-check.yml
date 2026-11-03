@@ -12,5 +12,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check published native package integrity
         run: python/python.exe -B scripts/native_packaging.py check .
-      - name: Test bundled runtime and public integrations
-        run: python/python.exe -B -m unittest discover tests
+      - name: Smoke-test bundled Studio and multi-person BVH
+        run: python/python.exe -B tests/test_bundle.py .
